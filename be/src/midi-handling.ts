@@ -21,7 +21,6 @@ class Circuit {
 		public readonly output: Output,
 	) { }
 
-
 	static detect() : Circuit | null {
 		const isCircuit = (name : String) => name.startsWith('Circuit');
 		const inputName = getInputs().find(isCircuit);
@@ -32,7 +31,15 @@ class Circuit {
 	}
 }
 
+import { readControls } from './midi-def';
+
 function main() {
+
+	readControls('be/docs/Circuit.csv')
+	.then(rows => {
+		console.log(rows);
+	})
+
 	const notes = [60,64,32,43];
 	const c = Circuit.detect();
 	if(c) {
