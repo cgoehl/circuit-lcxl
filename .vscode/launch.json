@@ -11,7 +11,7 @@
 			"skipFiles": [
 				"<node_internals>/**"
 			],
-			"program": "${workspaceFolder}/be/src/midi-handling.ts",
+			"program": "${workspaceFolder}/be/src/main.ts",
 			"preLaunchTask": "tsc: build - be/tsconfig.json",
 			"outFiles": [
 				"${workspaceFolder}/**/*.js"
