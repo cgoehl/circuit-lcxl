@@ -13,6 +13,8 @@ export const sortBy = selector => (a, b) => compare(selector(a), selector(b));
 
 export const delay = async (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export const range = (count: number) => Array.from(new Array(count)).map((_ , i) => i);
+
 export async function playNotes(output: Output, channel: Channel, notes: number[]): Promise<void> {
 	const interval = 150;
 	for (let i = 0; i <= (notes.length) * 2; i++) {
