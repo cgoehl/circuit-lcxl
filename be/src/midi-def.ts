@@ -85,8 +85,6 @@ function convertRow(row: any) {
 	}
 }
 
-
-
 interface MidiParameterControl {
 	manufacturer: string;
 	device: string;

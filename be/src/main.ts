@@ -3,8 +3,15 @@ import { readControls } from './midi-def';
 import { delay, playNotes } from './utils';
 import { NovationCircuit } from './NovationCircuit';
 import { NovationLaunchControl } from './NovationLaunchControl';
+import { startBroker } from './Broker';
 
 async function main() {
+	const broker = await startBroker();
+	await broker.sub('+/#', (payload) => console.log(payload));
+	await broker.pub('test', 'test');
+	await broker.pub('rest', 'rest');
+	
+	// bus.subscribe(e => console.log('###b', `${e.type}: ${JSON.stringify(e.payload)}`));
 	const lcxl = NovationLaunchControl.detect();
 }
 
