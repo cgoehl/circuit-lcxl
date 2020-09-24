@@ -1,34 +1,32 @@
 
-export interface IPhysicalControl {
-	readonly group: string,
+export interface IPhysicalLocation {
+	readonly section: string,
 	readonly index: number,
 	readonly col: number,
 	readonly row: number,
-	getTopicPath(): string[];
+}
+
+export interface IPhysicalControl {
+	location: IPhysicalLocation,
+	getTopicPath(): string[],
 };
 
-const getTopicPathC = ( type: string, { group, index, col, row }: IPhysicalControl) => () => [type, group, col.toString(), row.toString(), index.toString()];
+const getTopicPathC = ( type: string, { location: { section, index, col, row }}: IPhysicalControl) => () => [type, section, col.toString(), row.toString(), index.toString()];
 
-export class PhysicalKnob implements IPhysicalControl {
+export class Knob implements IPhysicalControl {
 	value: number | null = null;
 	constructor(
-		readonly group: string,
-		readonly index: number,
-		readonly col: number,
-		readonly row: number,
+		readonly location: IPhysicalLocation,
 		) { }
 	getTopicPath = getTopicPathC('knob', this);
 }
 
-export class PhysicalButton implements IPhysicalControl {
+export class Button implements IPhysicalControl {
 	isPressed: boolean = false;
 
 	constructor(
-		readonly group: string,
-		readonly index: number,
-		readonly col: number,
-		readonly row: number,
+		readonly location: IPhysicalLocation,
 		) { }
 	getTopicPath = getTopicPathC('button', this);
-	
 }
+

@@ -1,6 +1,6 @@
 import { getInputs, getOutputs, Input, Output, Channel, Note } from 'easymidi';
 import { BaseDevice, IMidiIO } from './BaseDevice';
-import { PhysicalKnob, PhysicalButton } from './PhysicalControl';
+import { Knob, Button } from './PhysicalControl';
 
 
 
@@ -37,11 +37,11 @@ export class NovationLaunchControl extends BaseDevice {
 	private static upDownButtonCC = [ 104, 105 ];
 	private static leftRightButtondCC = [ 106, 107 ];
 
-	knobGrid: PhysicalKnob[] = [];
-	buttonGrid: PhysicalButton[] = [];
-	sideButtons: PhysicalButton[] = [];
-	upDownButtons: PhysicalButton[] = [];
-	leftRightButtons: PhysicalButton[] = [];
+	knobGrid: Knob[] = [];
+	buttonGrid: Button[] = [];
+	sideButtons: Button[] = [];
+	upDownButtons: Button[] = [];
+	leftRightButtons: Button[] = [];
 
 	constructor(
 		midi: IMidiIO,
@@ -52,20 +52,35 @@ export class NovationLaunchControl extends BaseDevice {
 			model: 'lcxl',
 			instance,
 		}, midi);
-		const knobCCLookup : { [controller: string]: PhysicalKnob }= {};
+		const knobCCLookup : { [controller: string]: Knob }= {};
 		NovationLaunchControl.knobCC.forEach((cc, index) => {
-			const knob = new PhysicalKnob('grid', index, index % 8, Math.floor(index / 8));
+			const knob = new Knob({
+				section: 'grid', 
+				index, 
+				col: index % 8, 
+				row: Math.floor(index / 8),
+			});
 			this.knobGrid.push(knob);
 			knobCCLookup[cc] = knob;
 		});
-		const buttonCCLookup : { [controller: string]: PhysicalButton }= {};
+		const buttonCCLookup : { [controller: string]: Button }= {};
 		NovationLaunchControl.upDownButtonCC.forEach((cc, index) => {
-			const button = new PhysicalButton('direction', index, 0, index);
+			const button = new Button({ 
+				section:'direction', 
+				index, 
+				col: 0, 
+				row: index,
+			});
 			this.upDownButtons.push(button);
 			buttonCCLookup[cc] = button;
 		});
 		NovationLaunchControl.leftRightButtondCC.forEach((cc, index) => {
-			const button = new PhysicalButton('direction', index + 2, index, 0);
+			const button = new Button({ 
+				section: 'direction', 
+				index: index + 2, 
+				col: index, 
+				row: 0,
+			});
 			this.upDownButtons.push(button);
 			buttonCCLookup[cc] = button;
 		});
@@ -77,25 +92,33 @@ export class NovationLaunchControl extends BaseDevice {
 			if (knob) {
 				knob.value = value;
 				this.raiseEvent(knob.getTopicPath(), knob);
-				// bus.publish({	type: 'KnobChange',	payload: knob });
 			}
 			const button = buttonCCLookup[controller];
 			if (button) {
 				button.isPressed = value === 127;
 				this.raiseEvent(button.getTopicPath(), button);
-				// bus.publish({	type: 'ButtonChange',	payload: button });
 			}
 		});
 
-		const buttonNoteLookup : { [note: string]: PhysicalButton }= {};
+		const buttonNoteLookup : { [note: string]: Button }= {};
 		NovationLaunchControl.buttonNotes.forEach((note, index) => {
-			const button = new PhysicalButton('grid', index, index % 8, Math.floor(index / 8));
+			const button = new Button({
+				section: 'grid', 
+				index, 
+				col: index % 8, 
+				row: Math.floor(index / 8),
+			});
 			this.buttonGrid.push(button);
 			buttonNoteLookup[note] = button;
 		});
 
 		NovationLaunchControl.sideButtonLedNotes.forEach((note, index) => {
-			const button = new PhysicalButton('side', index, 0, index);
+			const button = new Button({
+				section: 'side', 
+				index, 
+				col: 0,
+				row: index,
+			});
 			this.sideButtons.push(button);
 			buttonNoteLookup[note] = button;
 		});
@@ -106,7 +129,6 @@ export class NovationLaunchControl extends BaseDevice {
 			if (button) {
 				button.isPressed = eventType === 'noteon';
 				this.raiseEvent(button.getTopicPath(), button);
-				// bus.publish({	type: 'PhysicalButton',	payload: button });
 			}
 		}
 		input.on('noteon', handleNote('noteon'));
