@@ -21,7 +21,7 @@ export async function startBroker(): Promise<IBroker> {
 		})
 	};
 
-	server.unsub =(topic: string, onMessage: (payload: string, topic: string) => void): Promise<void> => {
+	server.unsub = (topic: string, onMessage: (payload: string, topic: string) => void): Promise<void> => {
 		return new Promise((resolve, reject) => {
 			server.unsubscribe(topic, callbacks.get(onMessage), resolve);
 		});
@@ -37,6 +37,7 @@ export async function startBroker(): Promise<IBroker> {
 		createServer(server.handle).listen(port, () => {
 			broker.pub = server.pub;
 			broker.sub = server.sub;
+			broker.unsub = server.unsub;
 			resolve(server);
 		});
 	});
@@ -45,4 +46,5 @@ export async function startBroker(): Promise<IBroker> {
 export const broker: IBroker = {
 	pub: null,
 	sub: null,
+	unsub: null,
 }
