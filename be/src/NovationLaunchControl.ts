@@ -1,15 +1,41 @@
 import { getInputs, getOutputs, Input, Output, Channel, Note } from 'easymidi';
 import { BaseDevice, IMidiIO } from './BaseDevice';
 import { Knob, Button } from './PhysicalControl';
+import { range } from './utils';
 
+class LcxlLedEncoder {
+	colorCodes = {
+		off: 12,
+		redL: 13,
+		redH: 15,
+		amberL: 29,
+		amberH: 63,
+		yellow: 62,
+		greenL: 28,
+		greenH: 60,
+	};
 
+	blinkCodes = {
+		red: 11,
+		amber: 59,
+		yellow: 58,
+		green: 56,
+	};
 
-export class NovationLaunchControl extends BaseDevice {
+	rangeColors = [ 'greenH', 'greenL', 'yellow', 'amberH', 'redL', 'redH'];
+
+	colorCodeInRange = (value: number, min: number = 0, max: number = 127): number => {
+		const valueIn = Math.min(Math.max(min, value), max);
+		const rangeIn = max - min;
+		const relativeIn = (valueIn - min) / rangeIn;
+		const rangeOut = this.rangeColors.length - 1;
+		const index = Math.floor(rangeOut * relativeIn);
+		return this.colorCodes[this.rangeColors[index]];
+	};
+}
+
+export class Lcxl extends BaseDevice {
 	
-	protected commandReceived(command: string[], payload: object): void {
-		throw new Error('Method not implemented.');
-	}
-
 	private static knobLedNotes = [
 		13, 29, 45, 61, 77, 93, 109, 125,
 		14, 30, 46, 62, 78, 94, 110, 126,
@@ -29,19 +55,41 @@ export class NovationLaunchControl extends BaseDevice {
 	];
 
 	private static gridLedNotes = [
-		...NovationLaunchControl.knobLedNotes,
-		...NovationLaunchControl.buttonNotes,
+		...Lcxl.knobLedNotes,
+		...Lcxl.buttonNotes,
 	];
 
 	private static sideButtonLedNotes = [ 105, 106, 107, 108 ];
 	private static upDownButtonCC = [ 104, 105 ];
 	private static leftRightButtondCC = [ 106, 107 ];
 
+	private static ledEncoder = new LcxlLedEncoder();
+
 	knobGrid: Knob[] = [];
 	buttonGrid: Button[] = [];
 	sideButtons: Button[] = [];
 	upDownButtons: Button[] = [];
 	leftRightButtons: Button[] = [];
+
+	private setNoteLed = (note: number) => (color: number | string) => {
+		const value = typeof color === 'string'
+			? Lcxl.ledEncoder.colorCodes[color]
+			: Lcxl.ledEncoder.colorCodeInRange(color);
+		const message: Note = { channel: 8, note, velocity: value }
+		console.log('=> noteon', message)
+		this.midi.output.send('noteon', message);
+	}
+
+	setGridLed = (index: number, color: number | string): void => 
+		this.setNoteLed(Lcxl.gridLedNotes[index])(color);
+
+	clearLeds = () => {
+		range(Lcxl.gridLedNotes.length).forEach(i => this.setGridLed(i, 'off'));
+	}
+
+	protected commandReceived(command: string[], payload: object): void {
+		console.log(command);
+	}
 
 	constructor(
 		midi: IMidiIO,
@@ -52,8 +100,9 @@ export class NovationLaunchControl extends BaseDevice {
 			model: 'lcxl',
 			instance,
 		}, midi);
+
 		const knobCCLookup : { [controller: string]: Knob }= {};
-		NovationLaunchControl.knobCC.forEach((cc, index) => {
+		Lcxl.knobCC.forEach((cc, index) => {
 			const knob = new Knob({
 				section: 'grid', 
 				index, 
@@ -64,7 +113,7 @@ export class NovationLaunchControl extends BaseDevice {
 			knobCCLookup[cc] = knob;
 		});
 		const buttonCCLookup : { [controller: string]: Button }= {};
-		NovationLaunchControl.upDownButtonCC.forEach((cc, index) => {
+		Lcxl.upDownButtonCC.forEach((cc, index) => {
 			const button = new Button({ 
 				section:'direction', 
 				index, 
@@ -74,7 +123,7 @@ export class NovationLaunchControl extends BaseDevice {
 			this.upDownButtons.push(button);
 			buttonCCLookup[cc] = button;
 		});
-		NovationLaunchControl.leftRightButtondCC.forEach((cc, index) => {
+		Lcxl.leftRightButtondCC.forEach((cc, index) => {
 			const button = new Button({ 
 				section: 'direction', 
 				index: index + 2, 
@@ -101,7 +150,7 @@ export class NovationLaunchControl extends BaseDevice {
 		});
 
 		const buttonNoteLookup : { [note: string]: Button }= {};
-		NovationLaunchControl.buttonNotes.forEach((note, index) => {
+		Lcxl.buttonNotes.forEach((note, index) => {
 			const button = new Button({
 				section: 'grid', 
 				index, 
@@ -112,7 +161,7 @@ export class NovationLaunchControl extends BaseDevice {
 			buttonNoteLookup[note] = button;
 		});
 
-		NovationLaunchControl.sideButtonLedNotes.forEach((note, index) => {
+		Lcxl.sideButtonLedNotes.forEach((note, index) => {
 			const button = new Button({
 				section: 'side', 
 				index, 
@@ -136,7 +185,7 @@ export class NovationLaunchControl extends BaseDevice {
 	}
 
 	static deviceCount = 0;
-	static detect(): NovationLaunchControl | null {
+	static detect(): Lcxl | null {
 		const isLcxl = (name: String) => name.includes('- Launch Control XL');
 		const inputName = getInputs().find(isLcxl);
 		const outputName = getOutputs().find(isLcxl);
@@ -145,7 +194,7 @@ export class NovationLaunchControl extends BaseDevice {
 				input: new Input(inputName),
 				output: new Output(outputName),
 			}
-			return new NovationLaunchControl(midi, NovationLaunchControl.deviceCount.toString());
+			return new Lcxl(midi, Lcxl.deviceCount.toString());
 		}
 	}
 }

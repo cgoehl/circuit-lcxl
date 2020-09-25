@@ -25,7 +25,7 @@ export interface IEvent {
 
 export abstract class BaseDevice implements ICloseable {
 
-	private topicPrefix = '';
+	public topicPrefix = '';
 
 	constructor(
 		public readonly descriptor: IDeviceDescriptor,
@@ -41,13 +41,13 @@ export abstract class BaseDevice implements ICloseable {
 	protected raiseEvent(path: string[], payload: IEvent) {
 		broker.pub(
 			`${this.topicPrefix}/event/${path.join('/')}`,
-			JSON.stringify(payload)
+			payload
 		);
 	}
 
-	private handleCommand = (payload: string, topic: string) => {
+	private handleCommand = (payload: object, topic: string) => {
 		const command = topic.replace(`${this.topicPrefix}/command/`, '').split('/');
-		this.commandReceived(command, JSON.parse(payload) as ICommand);
+		this.commandReceived(command, payload as ICommand);
 	};
 
 	protected onClose(callback: () => void) {
