@@ -13,13 +13,11 @@ async function main() {
 		console.debug(topic, payload);
 	});
 	
-	// bus.subscribe(e => console.log('###b', `${e.type}: ${JSON.stringify(e.payload)}`));
 	const lcxl = Lcxl.detect();
 	await lcxl.init();
 	lcxl.clearLeds();
 	await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload) => {
 		const { location : { index }, value } = payload as Knob;
-		// lcxl.setGridLed(index, value);
 		broker.pub(`${lcxl.topicPrefix}/command/led/grid/byIdx/${index}`, { color: value });
 	});
 	console.log(lcxl);

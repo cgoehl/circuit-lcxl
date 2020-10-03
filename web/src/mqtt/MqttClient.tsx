@@ -19,8 +19,9 @@ export class MqttClient extends Component<MqttClientProps> {
 
 		client.on('message', function (topic, message) {
 			onMessage(message.toString(), topic);
-			client.end()
 		})
+
+		this.setState({ client });
 	}
 	
 	render() {

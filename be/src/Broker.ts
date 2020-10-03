@@ -25,7 +25,10 @@ export async function startBroker(): Promise<IBroker> {
 
 	aedes.sub = (topic: string, onMessage: (payload: object, topic: string) => void): Promise<void> => {
 		return new Promise((resolve, reject) => {
-			const callback = (packet, cb) => { cb(); onMessage(jsonParse(packet.payload.toString()), packet.topic); };
+			const callback = (packet, next) => {
+				setTimeout(() => onMessage(jsonParse(packet.payload.toString()), packet.topic), 0)
+				next();
+			};
 			callbacks.set(onMessage, callback);
 			aedes.subscribe(topic, callback, resolve);
 		})
