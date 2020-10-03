@@ -1,31 +1,33 @@
-import React, { Component } from 'react';
-import { connect as mqttConnect } from 'mqtt';
+import React, { useEffect } from 'react';
+import { connect as mqttConnect, MqttClient as Mqtt} from 'mqtt';
+import { useState } from '@hookstate/core';
 
 
-export interface MqttClientProps {
+export interface IMqttClientProps {
 	topics: string[],
 	onMessage: (message: String, topic: String) => void,
 }
 
-export class MqttClient extends Component<MqttClientProps> {
+export function MqttClient(props : IMqttClientProps) {
 
-	componentDidMount = () => {
-		const { topics, onMessage } = this.props;
+	const state = useState<Mqtt | null>(null);
+	useEffect(() => {
+		if (state.get() == null) {
+			const { topics, onMessage } = props;
+			
+			const client = mqttConnect('ws://localhost:8080');
+			client.on('connect', function () {
+				topics.forEach(topic => client.subscribe(topic));
+			})
+
+			client.on('message', function (topic, message) {
+				onMessage(message.toString(), topic);
+			})
+
+			state.set(client);
+		}
 		
-		const client = mqttConnect('ws://localhost:8080');
-		client.on('connect', function () {
-			topics.forEach(topic => client.subscribe(topic));
-		})
-
-		client.on('message', function (topic, message) {
-			onMessage(message.toString(), topic);
-		})
-
-		this.setState({ client });
-	}
-	
-	render() {
-		return null;
-	}
+	})
+	return null;
 }
 

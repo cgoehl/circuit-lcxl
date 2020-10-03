@@ -2,30 +2,22 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { MqttClient } from './mqtt/MqttClient';
+import { useState, State } from '@hookstate/core';
 
-class App extends Component {
-	
-	render() {
-		return (
-			<div className="App">
-				<MqttClient topics={['+/#']} onMessage={(m, t) => console.log(m, t)} />
-				<header className="App-header">
-					<img src={logo} className="App-logo" alt="logo" />
-					<p>
-						Edit <code>src/App.tsx</code> and save to reload.
-					</p>
-					<a
-						className="App-link"
-						href="https://reactjs.org"
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						Learn React
-					</a>
-				</header>
+interface IAppState {
+	text: string;
+}
+
+function App() {
+	const state: State<IAppState> = useState({ text: '' });
+	return (
+		<div className="App">
+			<MqttClient topics={['+/#']} onMessage={(m, t) => state.set(s => ({ text: `${t}\t${m}\n${s.text}`}))} />
+			<div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+				{state.get().text }
 			</div>
-		);
-	}
+		</div>
+	);
 }
 
 export default App;
