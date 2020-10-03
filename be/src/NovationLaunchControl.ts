@@ -87,21 +87,6 @@ export class Lcxl extends BaseDevice {
 		range(Lcxl.gridLedNotes.length).forEach(i => this.setGridLed(i, 'off'));
 	}
 
-	// private handleCmdLedByIdx = (payload: ICommand, topic: string[]) => {
-
-	// }
-
-	// protected commandReceived(command: string[], payload: ICommand): void {
-	// 	const [ target, section, addressing, ...address] = command;
-	// 	if (target === 'led' && section === 'grid') {
-	// 		if (addressing === 'byIdx') {
-	// 			const [ idx ] = address;
-	// 			const { color } = payload as any;
-	// 			this.setGridLed(+idx, color);
-	// 		}
-	// 	}
-	// }
-
 	constructor(
 		midi: IMidiIO,
 		instance: string,
@@ -111,12 +96,15 @@ export class Lcxl extends BaseDevice {
 			model: 'lcxl',
 			instance,
 		}, midi);
+	}
 
-		// this.registerCommand('led/grid/byIdx/+', (payload, topic) => {
-		// 	const idx = topic[topic.length - 1];
-		// 	const { color } = payload as any;
-		// 	this.setGridLed(+idx, color);
-		// });
+	init = async () => {
+		
+		await this.registerCommand('led/grid/byIdx/+', (payload, topic) => {
+			const idx = topic[topic.length - 1];
+			const { color } = payload as any;
+			this.setGridLed(+idx, color);
+		});
 
 		const knobCCLookup : { [controller: string]: Knob }= {};
 		Lcxl.knobCC.forEach((cc, index) => {
@@ -151,8 +139,9 @@ export class Lcxl extends BaseDevice {
 			buttonCCLookup[cc] = button;
 		});
 
-		const { input } = midi;
+		const { input } = this.midi;
 		input.on('cc', evt => {
+			console.log(evt);
 			const { channel, controller, value } = evt;
 			const knob = knobCCLookup[controller];
 			if (knob) {

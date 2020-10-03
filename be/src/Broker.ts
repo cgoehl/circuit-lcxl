@@ -43,28 +43,27 @@ export async function startBroker(): Promise<IBroker> {
 		});
 	}
 
-	return new Promise((resolve, reject) => {
-		createServer(aedes.handle).listen(port, () => {
-			broker.pub = aedes.pub;
-			broker.sub = aedes.sub;
-			broker.unsub = aedes.unsub;
-			resolve(aedes);
-		});
-	});
-
 	// return new Promise((resolve, reject) => {
 	// 	createServer(aedes.handle).listen(port, () => {
-	// 		const httpServer = createHttpServer();
-	// 		createWsServer({ server: httpServer }, aedes.handle as any);
-
-	// 		httpServer.listen(8080, () => {
-	// 			broker.pub = aedes.pub;
-	// 			broker.sub = aedes.sub;
-	// 			broker.unsub = aedes.unsub;
-	// 			resolve(aedes);
-	// 		});
+	// 		broker.pub = aedes.pub;
+	// 		broker.sub = aedes.sub;
+	// 		broker.unsub = aedes.unsub;
+	// 		resolve(aedes);
 	// 	});
 	// });
+
+	return new Promise((resolve, reject) => {
+		createServer(aedes.handle).listen(port, () => {
+			const httpServer = createHttpServer();
+			createWsServer({ server: httpServer }, aedes.handle as any);
+			httpServer.listen(8080, () => {
+				broker.pub = aedes.pub;
+				broker.sub = aedes.sub;
+				broker.unsub = aedes.unsub;
+				resolve(aedes);
+			});
+		});
+	});
 }
 
 export const broker: IBroker = {
