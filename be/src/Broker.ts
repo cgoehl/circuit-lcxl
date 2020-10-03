@@ -1,5 +1,7 @@
 import  { Aedes, AedesPublishPacket, PublishPacket, Server } from 'aedes';
 import { createServer } from 'net';
+import { createServer as createHttpServer } from 'http';
+import { createServer as createWsServer } from 'websocket-stream';
 
 
 export interface IBroker {
@@ -9,7 +11,7 @@ export interface IBroker {
 } 
 
 export async function startBroker(): Promise<IBroker> {
-	const server = Server() as Aedes & IBroker;
+	const aedes = Server() as Aedes & IBroker;
 	const port = 1883;
 	const callbacks = new Map<(payload: object, topic: string) => void, (packet: AedesPublishPacket, callback: () => void) => void>()
 
@@ -21,34 +23,48 @@ export async function startBroker(): Promise<IBroker> {
 		}
 	}
 
-	server.sub = (topic: string, onMessage: (payload: object, topic: string) => void): Promise<void> => {
+	aedes.sub = (topic: string, onMessage: (payload: object, topic: string) => void): Promise<void> => {
 		return new Promise((resolve, reject) => {
 			const callback = (packet, cb) => { cb(); onMessage(jsonParse(packet.payload.toString()), packet.topic); };
 			callbacks.set(onMessage, callback);
-			server.subscribe(topic, callback, resolve);
+			aedes.subscribe(topic, callback, resolve);
 		})
 	};
 
-	server.unsub = (topic: string, onMessage: (payload: object, topic: string) => void): Promise<void> => {
+	aedes.unsub = (topic: string, onMessage: (payload: object, topic: string) => void): Promise<void> => {
 		return new Promise((resolve, reject) => {
-			server.unsubscribe(topic, callbacks.get(onMessage), resolve);
+			aedes.unsubscribe(topic, callbacks.get(onMessage), resolve);
 		});
 	}
 
-	server.pub = (topic: string, payload: object): Promise<void> => {
+	aedes.pub = (topic: string, payload: object): Promise<void> => {
 		return new Promise((resolve, reject) => {
-			server.publish({ cmd: 'publish', dup: false, retain: false, qos: 0, topic, payload: JSON.stringify(payload) }, err => err ? reject(err) : resolve());
+			aedes.publish({ cmd: 'publish', dup: false, retain: false, qos: 0, topic, payload: JSON.stringify(payload) }, err => err ? reject(err) : resolve());
 		});
 	}
 
 	return new Promise((resolve, reject) => {
-		createServer(server.handle).listen(port, () => {
-			broker.pub = server.pub;
-			broker.sub = server.sub;
-			broker.unsub = server.unsub;
-			resolve(server);
+		createServer(aedes.handle).listen(port, () => {
+			broker.pub = aedes.pub;
+			broker.sub = aedes.sub;
+			broker.unsub = aedes.unsub;
+			resolve(aedes);
 		});
 	});
+
+	// return new Promise((resolve, reject) => {
+	// 	createServer(aedes.handle).listen(port, () => {
+	// 		const httpServer = createHttpServer();
+	// 		createWsServer({ server: httpServer }, aedes.handle as any);
+
+	// 		httpServer.listen(8080, () => {
+	// 			broker.pub = aedes.pub;
+	// 			broker.sub = aedes.sub;
+	// 			broker.unsub = aedes.unsub;
+	// 			resolve(aedes);
+	// 		});
+	// 	});
+	// });
 }
 
 export const broker: IBroker = {

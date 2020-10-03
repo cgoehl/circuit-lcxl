@@ -1,5 +1,6 @@
 import { getInputs, getOutputs, Input, Output, Channel, Note } from 'easymidi';
-import { BaseDevice, IMidiIO } from './BaseDevice';
+import { IpcNetConnectOpts } from 'net';
+import { BaseDevice, ICommand, IMidiIO } from './BaseDevice';
 import { Knob, Button } from './PhysicalControl';
 import { range } from './utils';
 
@@ -75,8 +76,7 @@ export class Lcxl extends BaseDevice {
 		const value = typeof color === 'string'
 			? Lcxl.ledEncoder.colorCodes[color]
 			: Lcxl.ledEncoder.colorCodeInRange(color);
-		const message: Note = { channel: 8, note, velocity: value }
-		console.log('=> noteon', message)
+		const message: Note = { channel: 8, note, velocity: value };
 		this.midi.output.send('noteon', message);
 	}
 
@@ -87,9 +87,20 @@ export class Lcxl extends BaseDevice {
 		range(Lcxl.gridLedNotes.length).forEach(i => this.setGridLed(i, 'off'));
 	}
 
-	protected commandReceived(command: string[], payload: object): void {
-		console.log(command);
-	}
+	// private handleCmdLedByIdx = (payload: ICommand, topic: string[]) => {
+
+	// }
+
+	// protected commandReceived(command: string[], payload: ICommand): void {
+	// 	const [ target, section, addressing, ...address] = command;
+	// 	if (target === 'led' && section === 'grid') {
+	// 		if (addressing === 'byIdx') {
+	// 			const [ idx ] = address;
+	// 			const { color } = payload as any;
+	// 			this.setGridLed(+idx, color);
+	// 		}
+	// 	}
+	// }
 
 	constructor(
 		midi: IMidiIO,
@@ -100,6 +111,12 @@ export class Lcxl extends BaseDevice {
 			model: 'lcxl',
 			instance,
 		}, midi);
+
+		// this.registerCommand('led/grid/byIdx/+', (payload, topic) => {
+		// 	const idx = topic[topic.length - 1];
+		// 	const { color } = payload as any;
+		// 	this.setGridLed(+idx, color);
+		// });
 
 		const knobCCLookup : { [controller: string]: Knob }= {};
 		Lcxl.knobCC.forEach((cc, index) => {
@@ -128,7 +145,7 @@ export class Lcxl extends BaseDevice {
 				section: 'direction', 
 				index: index + 2, 
 				col: index, 
-				row: 0,
+				row: 0,  
 			});
 			this.upDownButtons.push(button);
 			buttonCCLookup[cc] = button;
@@ -186,7 +203,7 @@ export class Lcxl extends BaseDevice {
 
 	static deviceCount = 0;
 	static detect(): Lcxl | null {
-		const isLcxl = (name: String) => name.includes('- Launch Control XL');
+		const isLcxl = (name: String) => name.includes('Launch Control XL');
 		const inputName = getInputs().find(isLcxl);
 		const outputName = getOutputs().find(isLcxl);
 		if (inputName && outputName) {

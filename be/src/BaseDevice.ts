@@ -33,10 +33,17 @@ export abstract class BaseDevice implements ICloseable {
 	) {
 		const { vendor, model, instance } = descriptor;
 		this.topicPrefix = `phy/${vendor}/${model}/${instance}`;
-		broker.sub(`${this.topicPrefix}/command/+/#`, this.handleCommand);
+		// broker.sub(`${this.topicPrefix}/command/+/#`, this.handleCommand);
 	}
 
-	protected abstract commandReceived(command: string[], payload: object): void;
+	// protected abstract commandReceived(command: string[], payload: object): void;
+
+	protected registerCommand(topic: string, callback: (payload: ICommand, topic: string[]) => void) {
+		const t = `${this.topicPrefix}/command/${topic}`;
+		const c = (payload, tc) => callback(payload as ICommand, tc.replace(`${this.topicPrefix}/command/`, '').split('/'));
+		broker.sub(t, c);
+		this.onClose(() => broker.unsub(t, c));
+	}
 
 	protected raiseEvent(path: string[], payload: IEvent) {
 		broker.pub(
@@ -45,10 +52,10 @@ export abstract class BaseDevice implements ICloseable {
 		);
 	}
 
-	private handleCommand = (payload: object, topic: string) => {
-		const command = topic.replace(`${this.topicPrefix}/command/`, '').split('/');
-		this.commandReceived(command, payload as ICommand);
-	};
+	// private handleCommand = (payload: object, topic: string) => {
+	// 	const command = topic.replace(`${this.topicPrefix}/command/`, '').split('/');
+	// 	this.commandReceived(command, payload as ICommand);
+	// };
 
 	protected onClose(callback: () => void) {
 		this.onCloseCallbacks.push(callback);
