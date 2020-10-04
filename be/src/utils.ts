@@ -9,7 +9,7 @@ function compare(a, b) {
       : 1;
 }
 
-export const sortBy = selector => (a, b) => compare(selector(a), selector(b));
+export const compareBy = selector => (a, b) => compare(selector(a), selector(b));
 
 export const delay = async (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

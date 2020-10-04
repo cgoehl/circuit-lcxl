@@ -1,10 +1,10 @@
 import { createReadStream } from 'fs';
 import csvParser = require('csv-parser');
-import { sortBy } from './utils';
+import { compareBy } from './utils';
 
 export async function readControls(path: string): Promise<object> {
 	const csvRows = await readFile(path);
-	const flatParams = csvRows.map(convertRow).sort(sortBy(r => r.sysexAddress));
+	const flatParams = csvRows.map(convertRow).sort(compareBy(r => r.sysexAddress));
 	const controls = {};
 	flatParams.forEach(p => {
 		if (!controls[p.section]) {

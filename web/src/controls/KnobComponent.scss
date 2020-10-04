@@ -1,0 +1,27 @@
+.knob {
+	margin: 10px;
+	
+	.background {
+		fill: black;
+	}
+
+	.pie-background {
+		stroke: gray;
+		fill: none;
+		stroke-linecap: round;
+	}
+
+	.pie-foreground {
+		stroke: magenta;
+		fill: none;
+	}
+
+	.dot {
+		fill: #af0;
+	}
+
+	.label {
+		stroke: #af0;
+		text-anchor: middle;
+	}
+}
