@@ -1,5 +1,5 @@
 import { getInputs, getOutputs, Input, Output, Channel } from 'easymidi';
-import { ICloseable } from "./ICloseable";
+import { BaseDevice, detectMidi, IMidiIO } from './BaseDevice';
 
 
 export interface CircuitChannelConfig {
@@ -8,7 +8,7 @@ export interface CircuitChannelConfig {
 	readonly drums: Channel,
 }
 
-export class NovationCircuit implements ICloseable {
+export class NovationCircuit extends BaseDevice {
 
 	static readonly defaultChannels: CircuitChannelConfig = {
 		synth1: 4,
@@ -17,21 +17,28 @@ export class NovationCircuit implements ICloseable {
 	};
 
 	constructor(
-		public readonly channels: CircuitChannelConfig,
-		public readonly input: Input,
-		public readonly output: Output) { }
-
-	close() {
-		this.input.close();
-		this.output.close();
+		midi: IMidiIO,
+		instance: string,
+		) {
+		super({
+			vendor: 'novation',
+			model: 'circuit',
+			instance,
+		}, midi);
 	}
 
-	static detect(): NovationCircuit | null {
-		const isCircuit = (name: String) => name.startsWith('Circuit');
-		const inputName = getInputs().find(isCircuit);
-		const outputName = getOutputs().find(isCircuit);
-		if (inputName && outputName) {
-			return new NovationCircuit(NovationCircuit.defaultChannels, new Input(inputName), new Output(outputName));
+	init = async () => {
+
+	}
+
+	static deviceCount = 0;
+	static async detect(): Promise<NovationCircuit | null> {
+		const midi = detectMidi(name => name.includes('Circuit'));
+		if (midi.input === null || midi.output === null) {
+			return null;
 		}
+		const result = new NovationCircuit(midi, NovationCircuit.deviceCount.toString());
+		await result.init();
+		return result;
 	}
 }

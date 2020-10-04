@@ -1,6 +1,6 @@
 import { getInputs, getOutputs, Input, Output, Channel, Note } from 'easymidi';
 import { IpcNetConnectOpts } from 'net';
-import { BaseDevice, ICommand, IMidiIO } from './BaseDevice';
+import { BaseDevice, detectMidi, ICommand, IMidiIO } from './BaseDevice';
 import { Knob, Button } from './PhysicalControl';
 import { range } from './utils';
 
@@ -191,16 +191,13 @@ export class Lcxl extends BaseDevice {
 	}
 
 	static deviceCount = 0;
-	static detect(): Lcxl | null {
-		const isLcxl = (name: String) => name.includes('Launch Control XL');
-		const inputName = getInputs().find(isLcxl);
-		const outputName = getOutputs().find(isLcxl);
-		if (inputName && outputName) {
-			const midi = {
-				input: new Input(inputName),
-				output: new Output(outputName),
-			}
-			return new Lcxl(midi, Lcxl.deviceCount.toString());
+	static async detect(): Promise<Lcxl | null> {
+		const midi = detectMidi((name: String) => name.includes('Launch Control XL'));
+		if (midi.input === null || midi.output === null) {
+			return null;
 		}
+		const result = new Lcxl(midi, Lcxl.deviceCount.toString());
+		await result.init();
+		return result;
 	}
 }

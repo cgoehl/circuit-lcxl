@@ -3,8 +3,32 @@ import { Lcxl } from './NovationLaunchControl';
 import { startBroker } from './Broker';
 import { Knob } from './PhysicalControl';
 import { getInputs, getOutputs, Input, Output } from 'easymidi';
+import { NovationCircuit } from './NovationCircuit';
 
-async function main() {
+mplx();
+//  lxclLedRange();
+// funnyLightsGame();
+
+async function mplx() {
+	console.log('inputs', getInputs());
+	console.log('outputs', getOutputs());
+
+	const broker = await startBroker();
+	await broker.sub('+/#', (payload, topic) => {
+		console.debug(topic, payload);
+	});
+	
+	const lcxl = await Lcxl.detect();
+	lcxl.clearLeds();
+	const circuit = await NovationCircuit.detect();
+	await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload) => {
+		const { location : { index }, value } = payload as Knob;
+		broker.pub(`${lcxl.topicPrefix}/command/led/grid/byIdx/${index}`, { color: value });
+	});
+	console.log(lcxl);
+}
+
+async function lxclLedRange() {
 	console.log('inputs', getInputs());
 	console.log('outputs', getOutputs());
 
@@ -13,8 +37,7 @@ async function main() {
 		console.debug(topic, payload);
 	});
 	
-	const lcxl = Lcxl.detect();
-	await lcxl.init();
+	const lcxl = await Lcxl.detect();
 	lcxl.clearLeds();
 	await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload) => {
 		const { location : { index }, value } = payload as Knob;
@@ -22,9 +45,6 @@ async function main() {
 	});
 	console.log(lcxl);
 }
-
-main();
-// funnyLightsGame();
 
 async function funnyLightsGame() {
 	console.log('inputs', getInputs());

@@ -1,6 +1,6 @@
 import { ICloseable } from "./ICloseable";
 import { broker } from './Broker';
-import { Input, Output } from "easymidi";
+import { getInputs, getOutputs, Input, Output } from "easymidi";
 
 
 export interface IDeviceDescriptor {
@@ -22,6 +22,14 @@ export interface IEvent {
 
 }
 
+export function detectMidi(isDevice: (name: string) => boolean) {
+	const inputName = getInputs().find(isDevice);
+	const outputName = getOutputs().find(isDevice);
+	return {
+		input: inputName ? new Input(inputName) : null,
+		output: outputName ? new Output(outputName) : null,
+	}
+}
 
 export abstract class BaseDevice implements ICloseable {
 
