@@ -1,27 +1,35 @@
 .knob {
 	margin: 10px;
 	
-	.background {
+	._background {
 		fill: black;
 	}
 
-	.pie-background {
+	._pie-background {
 		stroke: gray;
 		fill: none;
 		stroke-linecap: round;
 	}
 
-	.pie-foreground {
+	._pie-foreground {
 		stroke: magenta;
 		fill: none;
 	}
 
-	.dot {
+	._dot {
 		fill: #af0;
 	}
 
-	.label {
+	._label {
 		stroke: #af0;
 		text-anchor: middle;
+		dominant-baseline: central;
+	}
+
+	._hand {
+		stroke: #0af;
+		stroke-width: 5;
+		stroke-linecap: round;
+
 	}
 }
