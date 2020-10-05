@@ -4,6 +4,8 @@ import { startBroker } from './Broker';
 import { Knob } from './PhysicalControl';
 import { getInputs, getOutputs, Input, Output } from 'easymidi';
 import { NovationCircuit } from './NovationCircuit';
+import { arrayToObject, compareBy } from './utils';
+import { MidiCc } from './MidiParameter';
 
 mplx();
 //  lxclLedRange();
@@ -22,8 +24,29 @@ async function mplx() {
 	lcxl.clearLeds();
 	const circuit = await NovationCircuit.detect();
 	await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload) => {
-		const { location : { index }, value } = payload as Knob;
+		const { location : { index, row, col }, value } = payload as Knob;
 		broker.pub(`${lcxl.topicPrefix}/command/led/grid/byIdx/${index}`, { color: value });
+		const section = Object.values(circuit.sections)[row];
+		if (section) {
+			const param = Object.values(section.parameters)[col];
+			if (param) {
+				console.log(param.name);
+				if (param.protocol.type == 'cc') {
+					const cc = param.protocol as MidiCc;
+					//todo: create function for clamp
+					const clamped = Math.max(cc.minValue, Math.min(cc.maxValue, value));
+					const msg = {
+						controller: cc.msb,
+						value: clamped,
+						channel: NovationCircuit.defaultChannels.synth1,
+					};
+					console.log(param.name, clamped)
+					circuit.midi.output.send('cc', msg);
+				} else {
+					console.log('Unsupported protocol', param.protocol.type);
+				}
+			}
+		}
 	});
 	console.log(lcxl);
 }

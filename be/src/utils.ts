@@ -9,6 +9,14 @@ function compare(a, b) {
       : 1;
 }
 
+export const arrayToObject = <T>(items: T[], selector: (item: T) => string): {[key: string]: T}=> {
+	const r = {};
+	items.forEach((item) => {
+		r[selector(item)] = item;
+	});
+	return r;
+}
+
 export const compareBy = selector => (a, b) => compare(selector(a), selector(b));
 
 export const delay = async (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
