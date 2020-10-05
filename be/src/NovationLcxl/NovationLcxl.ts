@@ -1,8 +1,8 @@
 import { getInputs, getOutputs, Input, Output, Channel, Note } from 'easymidi';
 import { IpcNetConnectOpts } from 'net';
-import { BaseDevice, detectMidi, ICommand, IMidiIO } from './BaseDevice';
-import { Knob, Button } from './PhysicalControl';
-import { range } from './utils';
+import { BaseDevice, detectMidi, ICommand, IMidiIO } from '../BaseDevice';
+import { Knob, Button } from '../PhysicalControl';
+import { range } from '../utils';
 
 class LcxlLedEncoder {
 	colorCodes = {

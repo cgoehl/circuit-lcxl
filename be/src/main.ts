@@ -1,10 +1,9 @@
 
-import { Lcxl } from './NovationLaunchControl';
+import { Lcxl } from './NovationLcxl/NovationLcxl';
 import { startBroker } from './Broker';
 import { Knob } from './PhysicalControl';
 import { getInputs, getOutputs, Input, Output } from 'easymidi';
-import { NovationCircuit } from './NovationCircuit';
-import { arrayToObject, compareBy } from './utils';
+import { NovationCircuit } from './NovationCircuit/NovationCircuit';
 import { MidiCc } from './MidiParameter';
 
 mplx();
