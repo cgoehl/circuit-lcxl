@@ -35,3 +35,5 @@ export async function playNotes(output: Output, channel: Channel, notes: number[
 		await delay(interval);
 	}
 }
+
+export const asciiToString = (charCodes: number[]) => String.fromCharCode.apply(null, charCodes);

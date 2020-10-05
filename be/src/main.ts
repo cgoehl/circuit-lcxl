@@ -2,7 +2,7 @@
 import { Lcxl } from './NovationLcxl/NovationLcxl';
 import { startBroker } from './Broker';
 import { Knob } from './PhysicalControl';
-import { getInputs, getOutputs, Input, Output } from 'easymidi';
+import { Channel, getInputs, getOutputs, Input, Output } from 'easymidi';
 import { NovationCircuit } from './NovationCircuit/NovationCircuit';
 import { MidiCc } from './MidiParameter';
 
@@ -37,7 +37,7 @@ async function mplx() {
 					const msg = {
 						controller: cc.msb,
 						value: clamped,
-						channel: NovationCircuit.defaultChannels.synth1,
+						channel: 0 as Channel,
 					};
 					console.log(param.name, clamped)
 					circuit.midi.output.send('cc', msg);
