@@ -1,26 +1,28 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
-import { MqttClient } from './mqtt/MqttClient';
-import { useState, State } from '@hookstate/core';
-import { KnobComponent } from './controls/KnobComponent';
-import { range } from '../shared/utils';
+import React, { useEffect } from 'react';
+import './App.scss';
+import { useState } from '@hookstate/core';
+import { store } from './state/store';
+import { startMqttController } from './state/control';
+import { VirtualControlRoot } from './controls/VirtualControlCompnents';
 
 interface IAppState {
 	text: string;
 }
 
 function App() {
-	const state: State<IAppState> = useState({ text: '' });
+	useEffect(() => {
+		startMqttController();
+	}, []);
+	const state = useState(store);
+	const rootSection = state.get().rootSection;
 	return (
 		<div className="App">
-			<MqttClient topics={['+/#']} onMessage={(m, t) => state.set(s => ({ text: `${t}\t${m}\n${s.text}`}))} />
-			<div>
+			{/* <div>
 				{range(11).map(i => <KnobComponent key={i} value={i * 0.1} label={i.toString()}/>)}
-			</div>
-			<div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
-				{state.get().text }
-			</div>
+			</div> */}
+			{ rootSection 
+				? <VirtualControlRoot section={rootSection} />
+				: 'Waiting for layout...' }
 		</div>
 	);
 }

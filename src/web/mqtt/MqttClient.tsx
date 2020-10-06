@@ -6,6 +6,7 @@ import { useState } from '@hookstate/core';
 export interface IMqttClientProps {
 	topics: string[],
 	onMessage: (message: String, topic: String) => void,
+	onConnect: () => void,
 }
 
 export function MqttClient(props : IMqttClientProps) {
@@ -13,7 +14,7 @@ export function MqttClient(props : IMqttClientProps) {
 	const state = useState<Mqtt | null>(null);
 	useEffect(() => {
 		if (state.get() == null) {
-			const { topics, onMessage } = props;
+			const { topics, onMessage, onConnect } = props;
 			
 			const client = mqttConnect('ws://localhost:8080');
 			client.on('connect', function () {
@@ -22,6 +23,7 @@ export function MqttClient(props : IMqttClientProps) {
 
 			client.on('message', function (topic, message) {
 				onMessage(message.toString(), topic);
+				onConnect();
 			})
 
 			state.set(client);
