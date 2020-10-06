@@ -5,6 +5,7 @@ import { Knob } from './PhysicalControl';
 import { Channel, getInputs, getOutputs, Input, Output } from 'easymidi';
 import { NovationCircuit } from './NovationCircuit/NovationCircuit';
 import { MidiCc } from './MidiParameter';
+import { buildVirtualLayout } from './NovationCircuit/CircuitVirtualController';
 
 mplx();
 //  lxclLedRange();
@@ -47,6 +48,10 @@ async function mplx() {
 			}
 		}
 	});
+	await broker.sub(`web/+/hello`, async (payload: any) => {
+		const { id } = payload;
+		await broker.pub(`web/${id}/layout`, buildVirtualLayout());
+	})
 	console.log(lcxl);
 }
 

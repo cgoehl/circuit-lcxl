@@ -32,7 +32,6 @@ export class NovationCircuit extends BaseDevice {
 		this.flatParameters = await readMidiMapping(`be/src/NovationCircuit/midiMapping.csv`);
 		this.flatParameters.sort(compareBy(p => p.sysexAddress));
 		this.parameters = arrayToObject(this.flatParameters.slice().sort(compareBy(e => e.name.toLowerCase())), e => e.name.toLowerCase());
-		this.sections = buildSections(this.parameters);
 		const { input, output } = this.midi;
 		input.on('sysex' as any, (msg: any) => this.handleSysex(msg.bytes) as any);
 		input.on('program', message => {
@@ -97,29 +96,4 @@ export class NovationCircuit extends BaseDevice {
 
 
 
-function buildSections(	parameters: {[key: string]: MidiParameter}): {[key: string]: ParameterSection} {
 
-	const createOscSection = (id: string): ParameterSection => {
-		return {
-			name: `osc ${id}`,
-			parameters: [
-				parameters[`osc ${id} level`],
-				parameters[`osc ${id} wave`],
-				parameters[`osc ${id} wave interpolate`],
-				parameters[`osc ${id} pulse width index`],
-				parameters[`osc ${id} virtual sync depth`],
-				parameters[`osc ${id} density`],
-				parameters[`osc ${id} density detune`],
-				parameters[`osc ${id} semitones`],
-				parameters[`osc ${id} cents`],
-				parameters[`osc ${id} pitchbend`],
-			]
-		}
-	}
-
-	const sections = [ 
-		createOscSection('1'),	
-		createOscSection('2'),	
-	];
-	return arrayToObject(sections, s => s.name);
-}
