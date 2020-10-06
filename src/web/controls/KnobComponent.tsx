@@ -1,5 +1,5 @@
 import React from 'react';
-import { degToRad, polarToCartesian } from '../utils';
+import { degToRad, polarToCartesian } from '../../shared/utils';
 import './KnobComponent.scss'
 
 interface IKnobComponentProps {

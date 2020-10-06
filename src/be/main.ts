@@ -2,10 +2,11 @@
 import { Lcxl } from './NovationLcxl/NovationLcxl';
 import { startBroker } from './Broker';
 import { Knob } from './PhysicalControl';
-import { Channel, getInputs, getOutputs, Input, Output } from 'easymidi';
+import { Channel, getInputs, getOutputs, Input, Note, Output } from 'easymidi';
 import { NovationCircuit } from './NovationCircuit/NovationCircuit';
 import { MidiCc } from './MidiParameter';
 import { buildVirtualLayout } from './NovationCircuit/CircuitVirtualController';
+import { delay } from '../shared/utils';
 
 mplx();
 //  lxclLedRange();
@@ -26,27 +27,27 @@ async function mplx() {
 	await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload) => {
 		const { location : { index, row, col }, value } = payload as Knob;
 		broker.pub(`${lcxl.topicPrefix}/command/led/grid/byIdx/${index}`, { color: value });
-		const section = Object.values(circuit.sections)[row];
-		if (section) {
-			const param = Object.values(section.parameters)[col];
-			if (param) {
-				console.log(param.name);
-				if (param.protocol.type == 'cc') {
-					const cc = param.protocol as MidiCc;
-					//todo: create function for clamp
-					const clamped = Math.max(cc.minValue, Math.min(cc.maxValue, value));
-					const msg = {
-						controller: cc.msb,
-						value: clamped,
-						channel: 0 as Channel,
-					};
-					console.log(param.name, clamped)
-					circuit.midi.output.send('cc', msg);
-				} else {
-					console.log('Unsupported protocol', param.protocol.type);
-				}
-			}
-		}
+		// const section = Object.values(circuit.sections)[row];
+		// if (section) {
+		// 	const param = Object.values(section.parameters)[col];
+		// 	if (param) {
+		// 		console.log(param.name);
+		// 		if (param.protocol.type == 'cc') {
+		// 			const cc = param.protocol as MidiCc;
+		// 			//todo: create function for clamp
+		// 			const clamped = Math.max(cc.minValue, Math.min(cc.maxValue, value));
+		// 			const msg = {
+		// 				controller: cc.msb,
+		// 				value: clamped,
+		// 				channel: 0 as Channel,
+		// 			};
+		// 			console.log(param.name, clamped)
+		// 			circuit.midi.output.send('cc', msg);
+		// 		} else {
+		// 			console.log('Unsupported protocol', param.protocol.type);
+		// 		}
+		// 	}
+		// }
 	});
 	await broker.sub(`web/+/hello`, async (payload: any) => {
 		const { id } = payload;
@@ -110,4 +111,17 @@ async function funnyLightsGame() {
 				break;
 		}
 	});
+}
+
+export async function playNotes(output: Output, channel: Channel, notes: number[]): Promise<void> {
+	const interval = 150;
+	for (let i = 0; i <= (notes.length) * 2; i++) {
+		const note: Note = { channel, note: notes[Math.floor(i/2)], velocity: 64 };
+		if (i % 2 == 0) {
+			output.send('noteon', note);
+		} else {
+			output.send('noteoff', note);
+		}
+		await delay(interval);
+	}
 }

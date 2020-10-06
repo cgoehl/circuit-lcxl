@@ -4,7 +4,7 @@ import './App.css';
 import { MqttClient } from './mqtt/MqttClient';
 import { useState, State } from '@hookstate/core';
 import { KnobComponent } from './controls/KnobComponent';
-import { range } from './utils';
+import { range } from '../shared/utils';
 
 interface IAppState {
 	text: string;

@@ -2,7 +2,7 @@ import { getInputs, getOutputs, Input, Output, Channel } from 'easymidi';
 import { Path } from 'typescript';
 import { BaseDevice, detectMidi, IMidiIO } from '../BaseDevice';
 import { MidiParameter, MidiParameterProtocol, ParameterSection } from '../MidiParameter';
-import { arrayToObject, compareBy } from '../utils';
+import { arrayToObject, compareBy } from '../../shared/utils';
 import { circuitSysex } from './ciruitSysex';
 import { readControls as readMidiMapping } from './midiMappingRead';
 import { Patch } from './Patch';
@@ -12,7 +12,7 @@ export class NovationCircuit extends BaseDevice {
 
 	flatParameters: MidiParameter[];
 	parameters: {[key: string]: MidiParameter} = {};
-	sections: {[key: string]: ParameterSection} = {};
+	// sections: {[key: string]: ParameterSection} = {};
 
 	patch0: Patch = null;
 	patch1: Patch = null;

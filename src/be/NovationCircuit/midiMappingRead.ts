@@ -1,7 +1,7 @@
-import csvParser = require("csv-parser");
 import { createReadStream } from "fs";
 import { MidiParameter, MidiParameterProtocol } from "../MidiParameter";
-import { compareBy } from "../utils";
+import { compareBy } from "../../shared/utils";
+import csvParser = require("csv-parser");
 
 export async function readControls(path: string): Promise<MidiParameter[]> {
 	const csvRows = await readFile(path);

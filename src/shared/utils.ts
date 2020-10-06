@@ -12,6 +12,16 @@ export const delay = async (ms: number) => new Promise((resolve) => setTimeout(r
 
 export const range = (count: number) => Array.from(new Array(count)).map((_ , i) => i);
 
+export const asciiToString = (charCodes: number[]) => String.fromCharCode.apply(null, charCodes);
+
+export const arrayToObject = <T>(items: T[], selector: (item: T) => string): {[key: string]: T}=> {
+	const r: {[key: string]: T} = {};
+	items.forEach((item) => {
+		r[selector(item)] = item;
+	});
+	return r;
+}
+
 export interface IPoint2 {
 	x: number;
 	y: number;

@@ -1,5 +1,5 @@
 import { MidiParameter } from "../MidiParameter";
-import { asciiToString } from "../utils";
+import { asciiToString } from "../../shared/utils";
 import { circuitSysex } from "./ciruitSysex";
 
 
