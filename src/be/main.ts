@@ -5,7 +5,7 @@ import { Knob } from './PhysicalControl';
 import { Channel, getInputs, getOutputs, Input, Note, Output } from 'easymidi';
 import { NovationCircuit } from './NovationCircuit/NovationCircuit';
 import { MidiCc } from './MidiParameter';
-import { buildVirtualLayout } from './NovationCircuit/CircuitVirtualController';
+import { CircuitVirtualContorller } from './NovationCircuit/CircuitVirtualController';
 import { delay } from '../shared/utils';
 
 mplx();
@@ -24,36 +24,42 @@ async function mplx() {
 	const lcxl = await Lcxl.detect();
 	lcxl.clearLeds();
 	const circuit = await NovationCircuit.detect();
-	await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload) => {
-		const { location : { index, row, col }, value } = payload as Knob;
-		broker.pub(`${lcxl.topicPrefix}/command/led/grid/byIdx/${index}`, { color: value });
-		// const section = Object.values(circuit.sections)[row];
-		// if (section) {
-		// 	const param = Object.values(section.parameters)[col];
-		// 	if (param) {
-		// 		console.log(param.name);
-		// 		if (param.protocol.type == 'cc') {
-		// 			const cc = param.protocol as MidiCc;
-		// 			//todo: create function for clamp
-		// 			const clamped = Math.max(cc.minValue, Math.min(cc.maxValue, value));
-		// 			const msg = {
-		// 				controller: cc.msb,
-		// 				value: clamped,
-		// 				channel: 0 as Channel,
-		// 			};
-		// 			console.log(param.name, clamped)
-		// 			circuit.midi.output.send('cc', msg);
-		// 		} else {
-		// 			console.log('Unsupported protocol', param.protocol.type);
-		// 		}
-		// 	}
-		// }
-	});
-	await broker.sub(`web/+/hello`, async (payload: any) => {
-		const { id } = payload;
-		await broker.pub(`web/${id}/layout`, buildVirtualLayout());
-	})
-	console.log(lcxl);
+	const c = new CircuitVirtualContorller(
+		lcxl,
+		circuit,
+		broker
+	);
+	await c.start();
+	// await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload) => {
+	// 	const { location : { index, row, col }, value } = payload as Knob;
+	// 	broker.pub(`${lcxl.topicPrefix}/command/led/grid/byIdx/${index}`, { color: value });
+	// 	// const section = Object.values(circuit.sections)[row];
+	// 	// if (section) {
+	// 	// 	const param = Object.values(section.parameters)[col];
+	// 	// 	if (param) {
+	// 	// 		console.log(param.name);
+	// 	// 		if (param.protocol.type == 'cc') {
+	// 	// 			const cc = param.protocol as MidiCc;
+	// 	// 			//todo: create function for clamp
+	// 	// 			const clamped = Math.max(cc.minValue, Math.min(cc.maxValue, value));
+	// 	// 			const msg = {
+	// 	// 				controller: cc.msb,
+	// 	// 				value: clamped,
+	// 	// 				channel: 0 as Channel,
+	// 	// 			};
+	// 	// 			console.log(param.name, clamped)
+	// 	// 			circuit.midi.output.send('cc', msg);
+	// 	// 		} else {
+	// 	// 			console.log('Unsupported protocol', param.protocol.type);
+	// 	// 		}
+	// 	// 	}
+	// 	// }
+	// });
+	// await broker.sub(`web/+/hello`, async (payload: any) => {
+	// 	const { id } = payload;
+	// 	await broker.pub(`web/${id}/layout`, buildVirtualLayout());
+	// })
+	// console.log(lcxl);
 }
 
 async function lxclLedRange() {

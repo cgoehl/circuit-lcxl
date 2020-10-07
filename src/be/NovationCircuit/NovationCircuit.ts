@@ -6,6 +6,7 @@ import { arrayToObject, compareBy } from '../../shared/utils';
 import { circuitSysex } from './ciruitSysex';
 import { readControls as readMidiMapping } from './midiMappingRead';
 import { CircuitPatch } from './Patch';
+import { Property } from '../../shared/Property';
 
 
 export class NovationCircuit extends BaseDevice {
@@ -14,8 +15,8 @@ export class NovationCircuit extends BaseDevice {
 	parameters: {[key: string]: MidiParameter} = {};
 	// sections: {[key: string]: ParameterSection} = {};
 
-	patch0: CircuitPatch = null;
-	patch1: CircuitPatch = null;
+	patch0: Property<CircuitPatch> = null;
+	patch1: Property<CircuitPatch> = null;
 
 	constructor(
 		midi: IMidiIO,
@@ -29,7 +30,7 @@ export class NovationCircuit extends BaseDevice {
 	}
 
 	init = async () => {
-		this.flatParameters = await readMidiMapping(`be/src/NovationCircuit/midiMapping.csv`);
+		this.flatParameters = await readMidiMapping(`src/be/NovationCircuit/midiMapping.csv`);
 		this.flatParameters.sort(compareBy(p => p.sysexAddress));
 		this.parameters = arrayToObject(this.flatParameters.slice().sort(compareBy(e => e.name.toLowerCase())), e => e.name.toLowerCase());
 		const { input, output } = this.midi;
@@ -37,18 +38,14 @@ export class NovationCircuit extends BaseDevice {
 		input.on('program', message => {
 			if (message.channel === 1) {
 				this.sendPatchDumpRequest(message.channel)
-					.then(patch => this.patch1 = patch);
+					.then(this.patch1.set);
 			} else {
 				this.sendPatchDumpRequest(message.channel)
-					.then(patch => this.patch0 = patch);
+					.then(this.patch0.set);
 			}
-			console.log(this);
 		});
-		console.log(this);
-		this.patch0 = await this.sendPatchDumpRequest(0);
-		console.log(this);
-		this.patch1 = await this.sendPatchDumpRequest(1);
-		console.log(this);
+		this.patch0 = new Property(await this.sendPatchDumpRequest(0));
+		this.patch1 = new Property(await this.sendPatchDumpRequest(1));
 	}
 
 	private __currentDumpRequestSynth: number = 0;

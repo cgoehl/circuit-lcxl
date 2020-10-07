@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { IVirtualControlButton, IVirtualControlItem, IVirtualControlKnob, IVirtualControlSection } from '../../shared/VirtualControl';
 import { KnobComponent } from './KnobComponent';
+import { useState } from '@hookstate/core';
+import { store } from '../state/store'
 
 import './VirtualControlComponents.scss';
 
@@ -10,10 +12,13 @@ interface IVirtualKnobComponentProps {
 }
 
 function VirtualKnobComponent(props: IVirtualKnobComponentProps) {
-	const { item: { id } } = props;
+	const { item: { label, id } } = props;
+	const state = useState(store);
+	const itemState: any = state.get().controls[id];
+	console.log(itemState);
 	return (
 		<button className='_knob' >
-			<KnobComponent label={id} value={0} />
+			<KnobComponent label={label} value={itemState ? itemState.value : 0} />
 		</button>
 	);
 }

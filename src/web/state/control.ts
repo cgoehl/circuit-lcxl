@@ -1,4 +1,4 @@
-import { resolve } from 'dns';
+
 import { connect as mqttConnect, MqttClient as Mqtt} from 'mqtt';
 import { store } from './store';
 
@@ -9,8 +9,7 @@ class MqttController {
 	constructor(
 		readonly client: Mqtt,
 	) {	
-		const state = store.get();
-		this.topicPrefix = `web/${state.id}`;
+		this.topicPrefix = `web`;
 	}
 
 	handleMessage = async (topic: string[], payload: any) => {
@@ -20,6 +19,13 @@ class MqttController {
 				console.log('received root-section:', payload);
 				store.merge({ rootSection: payload });
 				break;
+			case 'vc':
+				const id = ['web', ...topic].join('/');
+				console.log(id);
+				// console.log({ controls: { [id]: payload }})
+				store.merge(p => ({ controls: { [id]: payload }}));
+				
+				break;
 			default:
 				console.warn('unsupported command', cmd);
 		}
@@ -27,9 +33,9 @@ class MqttController {
 
 	start = async () => {
 		this.client.on('connect', () => {
-			this.publish('hello', { id: store.get().id });
+			this.publish('hello', { });
 			store.merge({ isMqttConnected: true });
-			this.client.subscribe(`${this.topicPrefix}/+`);
+			this.client.subscribe(`${this.topicPrefix}/#`);
 		});
 		this.client.on('error', e => console.error(e));
 		this.client.on('message', (topic: string, payload: Buffer) => {
