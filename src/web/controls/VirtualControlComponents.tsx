@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { IVirtualControlButton, IVirtualControlItem, IVirtualControlKnob, IVirtualControlSection } from '../../shared/VirtualControl';
 import { KnobComponent } from './KnobComponent';
 
+import './VirtualControlComponents.scss';
+
 
 interface IVirtualKnobComponentProps {
 	item: IVirtualControlKnob,

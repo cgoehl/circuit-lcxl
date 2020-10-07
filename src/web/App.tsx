@@ -3,7 +3,7 @@ import './App.scss';
 import { useState } from '@hookstate/core';
 import { store } from './state/store';
 import { startMqttController } from './state/control';
-import { VirtualControlRoot } from './controls/VirtualControlCompnents';
+import { VirtualControlRoot } from './controls/VirtualControlComponents';
 
 interface IAppState {
 	text: string;
