@@ -45,7 +45,7 @@ export class CircuitVirtualContorller {
 			await broker.pub(`web/layout`, this.buildVirtualLayout(circuit));
 		});
 		circuit.patch0.on('changed', (patch) => {
-			patch.parameters.forEach(param => {
+			circuit.flatParameters.forEach(param => {
 				this.sendPatchParam(patch, 0, param);
 			});
 		})
@@ -92,12 +92,12 @@ export class CircuitVirtualContorller {
 			type: 'section',
 			items: [
 				...staticItems,
-				...(circuit.patch0 ? [this.buildPatchLayout(circuit.patch0.get(), 0)] : []),
+				...(circuit.patch0 ? [this.buildPatchLayout(circuit, 0)] : []),
 			]
 		};
 	}
 
-	buildPatchLayout(patch: CircuitPatch, number: number): IVirtualControlSection {
+	buildPatchLayout(circuit: NovationCircuit, number: number): IVirtualControlSection {
 		const createOscSection = (id: string): IVirtualControlSection => {
 			const items = [
 				`osc ${id} level`,
@@ -111,7 +111,7 @@ export class CircuitVirtualContorller {
 				`osc ${id} cents`,
 				`osc ${id} pitchbend`,
 			].map((paramName: string): IVirtualControlItem => {
-				const { sysexAddress, name } = patch.parametersByName[paramName];
+				const { sysexAddress, name } = circuit.parametersByName[paramName];
 				return {
 					type: 'knob',
 					id: this.patchParamTopic(number, sysexAddress),

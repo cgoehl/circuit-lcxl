@@ -11,8 +11,9 @@ import { Property } from '../../shared/Property';
 
 export class NovationCircuit extends BaseDevice {
 
-	flatParameters: MidiParameter[];
-	parameters: {[key: string]: MidiParameter} = {};
+	public flatParameters: MidiParameter[];
+	public parametersByName: {[name: string]: MidiParameter} = null;
+	public parametersByAddress: {[address: string]: MidiParameter} = null;
 	// sections: {[key: string]: ParameterSection} = {};
 
 	patch0: Property<CircuitPatch> = null;
@@ -32,7 +33,8 @@ export class NovationCircuit extends BaseDevice {
 	init = async () => {
 		this.flatParameters = await readMidiMapping(`src/be/NovationCircuit/midiMapping.csv`);
 		this.flatParameters.sort(compareBy(p => p.sysexAddress));
-		this.parameters = arrayToObject(this.flatParameters.slice().sort(compareBy(e => e.name.toLowerCase())), e => e.name.toLowerCase());
+		this.parametersByName = arrayToObject(this.flatParameters, p => p.name);
+		this.parametersByAddress = arrayToObject(this.flatParameters, p => p.sysexAddress.toString());
 		const { input, output } = this.midi;
 		input.on('sysex' as any, (msg: any) => this.handleSysex(msg.bytes) as any);
 		input.on('program', message => {
@@ -44,7 +46,9 @@ export class NovationCircuit extends BaseDevice {
 					.then(this.patch0.set);
 			}
 		});
+		const s = Date.now();
 		this.patch0 = new Property(await this.sendPatchDumpRequest(0));
+		console.log('Patch retirival took', Date.now() - s);
 		this.patch1 = new Property(await this.sendPatchDumpRequest(1));
 	}
 
@@ -70,7 +74,7 @@ export class NovationCircuit extends BaseDevice {
 		switch (command) {
 			case circuitSysex.commands.replaceCurrentPatch: {
 				const patchData = msg.slice(ci + 2, msg.length - 1)
-				this.__currentDumpRequestPatchExecutor(new CircuitPatch(this.flatParameters, patchData));
+				this.__currentDumpRequestPatchExecutor(new CircuitPatch(patchData));
 				break;
 			}
 			default: {
