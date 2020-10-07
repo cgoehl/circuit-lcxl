@@ -5,7 +5,7 @@ import { MidiParameter, MidiParameterProtocol, ParameterSection } from '../MidiP
 import { arrayToObject, compareBy } from '../../shared/utils';
 import { circuitSysex } from './ciruitSysex';
 import { readControls as readMidiMapping } from './midiMappingRead';
-import { Patch } from './Patch';
+import { CircuitPatch } from './Patch';
 
 
 export class NovationCircuit extends BaseDevice {
@@ -14,8 +14,8 @@ export class NovationCircuit extends BaseDevice {
 	parameters: {[key: string]: MidiParameter} = {};
 	// sections: {[key: string]: ParameterSection} = {};
 
-	patch0: Patch = null;
-	patch1: Patch = null;
+	patch0: CircuitPatch = null;
+	patch1: CircuitPatch = null;
 
 	constructor(
 		midi: IMidiIO,
@@ -52,7 +52,7 @@ export class NovationCircuit extends BaseDevice {
 	}
 
 	private __currentDumpRequestSynth: number = 0;
-	private __currentDumpRequestPatchExecutor: (p: Patch) => void = null;
+	private __currentDumpRequestPatchExecutor: (p: CircuitPatch) => void = null;
 	sendPatchDumpRequest = (synth: number) => {
 		const msg = [
 			...circuitSysex.header,
@@ -61,7 +61,7 @@ export class NovationCircuit extends BaseDevice {
 			...circuitSysex.footer,
 		]
 		this.midi.output.send('sysex' as any, msg as any);
-		return new Promise<Patch>((resolve, reject) => {
+		return new Promise<CircuitPatch>((resolve, reject) => {
 			this.__currentDumpRequestSynth = synth;
 			this.__currentDumpRequestPatchExecutor = resolve;
 		});
@@ -73,7 +73,7 @@ export class NovationCircuit extends BaseDevice {
 		switch (command) {
 			case circuitSysex.commands.replaceCurrentPatch: {
 				const patchData = msg.slice(ci + 2, msg.length - 1)
-				this.__currentDumpRequestPatchExecutor(new Patch(this.flatParameters, patchData));
+				this.__currentDumpRequestPatchExecutor(new CircuitPatch(this.flatParameters, patchData));
 				break;
 			}
 			default: {
@@ -93,7 +93,3 @@ export class NovationCircuit extends BaseDevice {
 		return result;
 	}
 }
-
-
-
-

@@ -5,17 +5,20 @@ export type IVirtualControlItem =
 	;
 
 export type IVirtualControlSection = {
-	id: string,
 	type: 'section',
+	id: string,
+	label: string,
 	items: IVirtualControlItem[],
 }
 
 export type IVirtualControlKnob = {
-	id: string,
 	type: 'knob',
+	id: string,
+	label: string,
 }
 
 export type IVirtualControlButton = {
-	id: string,
 	type: 'button',
+	id: string,
+	label: string,
 }

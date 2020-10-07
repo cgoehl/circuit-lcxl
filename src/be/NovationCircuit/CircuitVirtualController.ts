@@ -1,40 +1,26 @@
 import { IVirtualControlSection } from "../../shared/VirtualControl";
 import { MidiParameter } from "../MidiParameter";
+import { NovationCircuit } from "./NovationCircuit";
 
-export function buildVirtualLayout(): IVirtualControlSection {
+export function buildVirtualLayout(circuit: NovationCircuit): IVirtualControlSection {
 
-	const createOscSection = (id: string): IVirtualControlSection => {
-		return {
-			id: `osc ${id}`,
-			type: 'section',
-			items: [
-				{ type: 'knob', id: `osc ${id} level` },
-				{ type: 'knob', id: `osc ${id} wave` },
-				{ type: 'knob', id: `osc ${id} wave interpolate` },
-				{ type: 'knob', id: `osc ${id} pulse width index` },
-				{ type: 'knob', id: `osc ${id} virtual sync depth` },
-				{ type: 'knob', id: `osc ${id} density` },
-				{ type: 'knob', id: `osc ${id} density detune` },
-				{ type: 'knob', id: `osc ${id} semitones` },
-				{ type: 'knob', id: `osc ${id} cents` },
-				{ type: 'knob', id: `osc ${id} pitchbend` },
-			]
-		}
-	}
+	const staticItems: IVirtualControlSection[] = [{
+		id: 'Common',
+		type: 'section',
+		label: 'Common',
+		items: [
+			{type: 'button', id: 'circuit-synth-1', label: 'Synth 1'},
+			{type: 'button', id: 'circuit-synth-1', label: 'Synth 2'}
+		]
+	}];
 
 	return { 
-		id: 'Circuit Virtual Control',
+		id: 'circuit-virtual-control',
+		label: 'Circuit',
 		type: 'section',
-		items: [{
-				id: 'Common',
-				type: 'section',
-				items: [
-					{type: 'button', id: 'Synth 1'},
-					{type: 'button', id: 'Synth 2'}
-				]
-			},
-			createOscSection('1'),
-			createOscSection('2'),
+		items: [
+			...staticItems,
+			...(circuit.patch0 ? [circuit.patch0.buildVirtualLayout()] : []),
 		]
 	};
 }
