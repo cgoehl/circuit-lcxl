@@ -2,7 +2,7 @@ import { getInputs, getOutputs, Input, Output, Channel } from 'easymidi';
 import { Path } from 'typescript';
 import { BaseDevice, detectMidi, IMidiIO } from '../BaseDevice';
 import { MidiParameter, MidiParameterProtocol, ParameterSection } from '../MidiParameter';
-import { arrayToObject, compareBy } from '../../shared/utils';
+import { arrayToObject, compareBy, delay } from '../../shared/utils';
 import { circuitSysex } from './ciruitSysex';
 import { readControls as readMidiMapping } from './midiMappingRead';
 import { CircuitPatch } from './Patch';
@@ -16,8 +16,8 @@ export class NovationCircuit extends BaseDevice {
 	public parametersByAddress: {[address: string]: MidiParameter} = null;
 	// sections: {[key: string]: ParameterSection} = {};
 
-	patch0: Property<CircuitPatch> = null;
-	patch1: Property<CircuitPatch> = null;
+	patch0 = new Property<CircuitPatch>(null);
+	patch1 = new Property<CircuitPatch>(null);
 
 	constructor(
 		midi: IMidiIO,
@@ -37,23 +37,14 @@ export class NovationCircuit extends BaseDevice {
 		this.parametersByAddress = arrayToObject(this.flatParameters, p => p.sysexAddress.toString());
 		const { input, output } = this.midi;
 		input.on('sysex' as any, (msg: any) => this.handleSysex(msg.bytes) as any);
-		input.on('program', message => {
-			if (message.channel === 1) {
-				this.sendPatchDumpRequest(message.channel)
-					.then(this.patch1.set);
-			} else {
-				this.sendPatchDumpRequest(message.channel)
-					.then(this.patch0.set);
-			}
-		});
-		const s = Date.now();
-		this.patch0 = new Property(await this.sendPatchDumpRequest(0));
-		console.log('Patch retirival took', Date.now() - s);
-		this.patch1 = new Property(await this.sendPatchDumpRequest(1));
+		input.on('program', message => this.sendPatchDumpRequest(message.channel));
+		this.sendPatchDumpRequest(0);
+		await delay(200);
+		this.sendPatchDumpRequest(1);
 	}
 
 	private __currentDumpRequestSynth: number = 0;
-	private __currentDumpRequestPatchExecutor: (p: CircuitPatch) => void = null;
+	// private __currentDumpRequestPatchExecutor: (p: CircuitPatch) => void = null;
 	sendPatchDumpRequest = (synth: number) => {
 		const msg = [
 			...circuitSysex.header,
@@ -62,10 +53,11 @@ export class NovationCircuit extends BaseDevice {
 			...circuitSysex.footer,
 		]
 		this.midi.output.send('sysex' as any, msg as any);
-		return new Promise<CircuitPatch>((resolve, reject) => {
+		// return new Promise<CircuitPatch>((resolve, reject) => {
 			this.__currentDumpRequestSynth = synth;
-			this.__currentDumpRequestPatchExecutor = resolve;
-		});
+			
+			// this.__currentDumpRequestPatchExecutor = resolve;
+		// });
 	}
 
 	handleSysex = (msg: number[]): void => {
@@ -74,13 +66,24 @@ export class NovationCircuit extends BaseDevice {
 		switch (command) {
 			case circuitSysex.commands.replaceCurrentPatch: {
 				const patchData = msg.slice(ci + 2, msg.length - 1)
-				this.__currentDumpRequestPatchExecutor(new CircuitPatch(patchData));
+				const synthNumber = this.__currentDumpRequestSynth;
+				const patch = new CircuitPatch(patchData);
+				synthNumber === 0
+					? this.patch0.set(patch)
+					: this.patch1.set(patch);
+				this.raiseEvent(['patch'], { patch, synthNumber });
 				break;
 			}
 			default: {
 				console.warn('Unsupported command', command, msg);
 			}
 		}
+	}
+
+	announceState = () => {
+		this.raiseEvent(['params'], { parameters: this.flatParameters });
+		this.raiseEvent(['patch'], { patch: this.patch0.get(), synthNumber: 0 });
+		this.raiseEvent(['patch'], { patch: this.patch1.get(), synthNumber: 1 });
 	}
 
 	static deviceCount = 0;

@@ -189,6 +189,16 @@ export class Lcxl extends BaseDevice {
 		input.on('noteoff', handleNote('noteoff'));
 	}
 
+	announceState = () => {
+		this.knobGrid.forEach(knob => this.raiseEvent(knob.getTopicPath(), knob));
+		[
+			...this.buttonGrid,
+			...this.sideButtons,
+			...this.upDownButtons,
+			...this.leftRightButtons,
+		].forEach(button => this.raiseEvent(button.getTopicPath(), button));
+	};
+
 	static deviceCount = 0;
 	static async detect(): Promise<Lcxl | null> {
 		const midi = detectMidi((name: String) => name.includes('Launch Control XL'));
