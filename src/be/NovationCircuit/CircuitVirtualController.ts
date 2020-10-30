@@ -1,10 +1,6 @@
-import { IVirtualControlItem, IVirtualControlSection } from "../../shared/VirtualControl";
 import { IBroker } from "../Broker";
-import { MidiCc, MidiParameter } from "../MidiParameter";
 import { Lcxl } from "../NovationLcxl";
-import { Knob } from "../PhysicalControl";
 import { NovationCircuit } from "./NovationCircuit";
-import { CircuitPatch } from "./Patch";
 
 export class CircuitVirtualContorller {
 	constructor(

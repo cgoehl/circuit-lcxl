@@ -1,5 +1,5 @@
 import { createReadStream } from "fs";
-import { MidiParameter, MidiParameterProtocol } from "../MidiParameter";
+import { MidiParameter, MidiParameterProtocol } from "../../shared/MidiParameter";
 import { compareBy } from "../../shared/utils";
 import csvParser = require("csv-parser");
 

@@ -3,7 +3,8 @@ import './App.scss';
 import { useState } from '@hookstate/core';
 import { store } from './state/store';
 import { startMqttController } from './state/control';
-import { VirtualControlRoot } from './controls/VirtualControlComponents';
+import { CircuitComponent } from './ciruit';
+// import { VirtualControlRoot } from './controls/VirtualControlComponents';
 
 interface IAppState {
 	text: string;
@@ -14,14 +15,14 @@ function App() {
 		startMqttController();
 	}, []);
 	const state = useState(store);
-	const rootSection = state.get().rootSection;
+	const isConnected = state.isMqttConnected.get();
 	return (
 		<div className="App">
 			{/* <div>
 				{range(11).map(i => <KnobComponent key={i} value={i * 0.1} label={i.toString()}/>)}
 			</div> */}
-			{ rootSection 
-				? <VirtualControlRoot section={rootSection} />
+			{ isConnected 
+				? <CircuitComponent circuitState={state.circuit} />
 				: 'Waiting for layout...' }
 		</div>
 	);

@@ -1,7 +1,5 @@
-import { getInputs, getOutputs, Input, Output, Channel } from 'easymidi';
-import { Path } from 'typescript';
 import { BaseDevice, detectMidi, IMidiIO } from '../BaseDevice';
-import { MidiParameter, MidiParameterProtocol, ParameterSection } from '../MidiParameter';
+import { MidiParameter, MidiParameterProtocol, ParameterSection } from '../../shared/MidiParameter';
 import { arrayToObject, compareBy, delay } from '../../shared/utils';
 import { circuitSysex } from './ciruitSysex';
 import { readControls as readMidiMapping } from './midiMappingRead';
@@ -65,7 +63,7 @@ export class NovationCircuit extends BaseDevice {
 		const command = msg[ci];
 		switch (command) {
 			case circuitSysex.commands.replaceCurrentPatch: {
-				const patchData = msg.slice(ci + 2, msg.length - 1)
+				const patchData = msg.slice(ci + 3, msg.length - 1)
 				const synthNumber = this.__currentDumpRequestSynth;
 				const patch = new CircuitPatch(patchData);
 				synthNumber === 0

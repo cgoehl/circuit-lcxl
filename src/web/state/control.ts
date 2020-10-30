@@ -12,22 +12,22 @@ class MqttController {
 		this.topicPrefix = `web`;
 	}
 
-	handleMessage = async (topic: string[], payload: any) => {
-		const [ cmd ] = topic;
-		switch(cmd) {
-			case 'layout':
-				console.log('received root-section:', payload);
-				store.merge({ rootSection: payload });
-				break;
-			case 'vc':
-				const id = ['web', ...topic].join('/');
-				console.log(id);
-				// console.log({ controls: { [id]: payload }})
-				store.merge(p => ({ controls: { [id]: payload }}));
-				
-				break;
-			default:
-				console.warn('unsupported command', cmd);
+	handleMessage = async (topic: string, payload: any) => {
+		if (/phy\/novation\/circuit\/\d+\/event\/params/.test(topic)) {
+			store.circuit.params.set(payload.parameters);
+		} else if (/phy\/novation\/circuit\/\d+\/event\/patch/.test(topic)) {
+			const { patch, synthNumber } = payload;
+			synthNumber === 0
+				? store.circuit.patch0.set(patch)
+				: store.circuit.patch1.set(patch)
+		} else if (/phy\/novation\/lcxl\/\d+\/event\/knob\/grid/.test(topic)) {
+			const { location: { index }, value } = payload;
+			store.lcxl.knobs.merge(k => ({ [index]: value }));
+		} else if (/phy\/novation\/lcxl\/\d+\/event\/button\/grid/.test(topic)) {
+			const { location: { index }, value } = payload;
+			store.lcxl.buttons.merge(k => ({ [index]: value }));
+		} else {
+			// console.warn('unsupported topic:', topic);
 		}
 	}
 
@@ -35,11 +35,11 @@ class MqttController {
 		this.client.on('connect', () => {
 			this.publish('hello', { });
 			store.merge({ isMqttConnected: true });
-			this.client.subscribe(`${this.topicPrefix}/#`);
+			this.client.subscribe(`phy/#`);
 		});
 		this.client.on('error', e => console.error(e));
 		this.client.on('message', (topic: string, payload: Buffer) => {
-			this.handleMessage(topic.replace(`${this.topicPrefix}/`, '').split('/'), JSON.parse(payload.toString()));
+			this.handleMessage(topic, JSON.parse(payload.toString()));
 		})
 	}
 
@@ -47,7 +47,7 @@ class MqttController {
 		this.client.publish(
 			`${this.topicPrefix}/${topic}`,
 			JSON.stringify(obj),
-			err => err ? reject(err) : reject()
+			err => err ? reject(err) : resolve()
 			);
 	});
 }

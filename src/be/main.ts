@@ -4,7 +4,6 @@ import { startBroker } from './Broker';
 import { Knob } from './PhysicalControl';
 import { Channel, getInputs, getOutputs, Input, Note, Output } from 'easymidi';
 import { NovationCircuit } from './NovationCircuit/NovationCircuit';
-import { MidiCc } from './MidiParameter';
 import { CircuitVirtualContorller } from './NovationCircuit/CircuitVirtualController';
 import { delay } from '../shared/utils';
 
