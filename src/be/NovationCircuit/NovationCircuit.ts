@@ -79,7 +79,7 @@ export class NovationCircuit extends BaseDevice {
 	}
 
 	announceState = () => {
-		this.raiseEvent(['params'], { parameters: this.flatParameters });
+		// this.raiseEvent(['params'], { parameters: this.flatParameters });
 		this.raiseEvent(['patch'], { patch: this.patch0.get(), synthNumber: 0 });
 		this.raiseEvent(['patch'], { patch: this.patch1.get(), synthNumber: 1 });
 	}

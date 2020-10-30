@@ -2,6 +2,7 @@ import { State } from '@hookstate/core';
 import React from 'react';
 import { isLabeledStatement } from 'typescript';
 import { MidiParameter } from '../../shared/MidiParameter';
+import { UiGrid, UiParameter } from '../../shared/UiParameter';
 import { arrayToObject, compareBy } from '../../shared/utils';
 import { KnobComponent } from '../controls/KnobComponent';
 import { ICircuitPatchState, ICircuitState } from '../state/store';
@@ -49,11 +50,11 @@ import './index.scss';
 // }
 
 export function CircuitPatchParameter(props: {
-	param: MidiParameter,
+	param: UiParameter,
 	value: number,
 }) {
 	const { value, param } = props;
-	const { name, protocol: { minValue, maxValue }, sysexAddress } = param;
+	const { label, minValue, maxValue } = param;
 	// if (minValue !== 0) {
 	// 	return <div>minValue !== 0: {JSON.stringify(p)}</div>
 	// }
@@ -61,7 +62,7 @@ export function CircuitPatchParameter(props: {
 	return (
 		<div className='_param'>
 			<KnobComponent value={v} label={value?.toString()} />
-			<div>{name}</div>
+			<div>{label}</div>
 		</div>);
 
 
@@ -69,29 +70,32 @@ export function CircuitPatchParameter(props: {
 
 export function CircuitPatchComponent(props: {
 	patchState: State<ICircuitPatchState>,
-	params: { [key: string]: MidiParameter },
+	// params: { [key: string]: MidiParameter },
+	layout: UiGrid,
 }) {
-	const { patchState, params } = props;
+	const { patchState, layout } = props;
 	return (
 		<div className='circuit-patch'>
 			<div className='_name'>{patchState.name.get()}</div>
 			<div className='_params'>
-				{Object.values(params).sort(compareBy((p: MidiParameter) => p.sysexAddress)).map((p: MidiParameter) => {
-					const value = patchState.bytes[p.sysexAddress].get();
-					return <CircuitPatchParameter value={value} param={p} key={p.name} />
+				{layout.items.map((param: UiParameter) => {
+					const value = patchState.bytes[param.address || -1].get();
+					return <CircuitPatchParameter value={value} param={param} key={param.address} />
 				})}
 			</div>
 		</div>
 	)
 }
 
-export function CircuitComponent(props: { circuitState: State<ICircuitState> }) {
-	const { circuitState } = props;
-	const { params } = circuitState.get();
-	const paramsByName = arrayToObject(params, p => p.name);
+export function CircuitComponent(props: { 
+	circuitState: State<ICircuitState>,
+	layout: UiGrid,
+}) {
+	const { circuitState, layout } = props;
+	// const paramsByName = arrayToObject(params, p => p.name);
 	return (
 		<div>
-			<CircuitPatchComponent patchState={circuitState.patch0} params={paramsByName} />
+			<CircuitPatchComponent patchState={circuitState.patch0} layout={layout} />
 		</div>
 	);
 }

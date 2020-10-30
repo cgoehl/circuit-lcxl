@@ -13,8 +13,9 @@ class MqttController {
 	}
 
 	handleMessage = async (topic: string, payload: any) => {
-		if (/phy\/novation\/circuit\/\d+\/event\/params/.test(topic)) {
-			store.circuit.params.set(payload.parameters);
+		if (/web\/ui/.test(topic)) {
+			console.log(payload)
+			store.ui.layout.set(payload);
 		} else if (/phy\/novation\/circuit\/\d+\/event\/patch/.test(topic)) {
 			const { patch, synthNumber } = payload;
 			synthNumber === 0
@@ -36,6 +37,7 @@ class MqttController {
 			this.publish('hello', { });
 			store.merge({ isMqttConnected: true });
 			this.client.subscribe(`phy/#`);
+			this.client.subscribe(`web/#`);
 		});
 		this.client.on('error', e => console.error(e));
 		this.client.on('message', (topic: string, payload: Buffer) => {

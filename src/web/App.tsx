@@ -18,13 +18,14 @@ function App() {
 	}, []);
 	const state = useState(store);
 	const isConnected = state.isMqttConnected.get();
+	const ui = state.ui.get();
 	return (
 		<div className="App">
 			{/* <div>
 				{range(127).map(i => i / 127).map(i => <KnobComponent key={i} value={i}  label={i.toFixed(3)}/>)}
 			</div> */}
-			{ isConnected 
-				? <CircuitComponent circuitState={state.circuit} />
+			{ isConnected && ui.layout
+				? <CircuitComponent circuitState={state.circuit} layout={ui.layout} />
 				: 'Waiting for layout...' }
 		</div>
 	);
