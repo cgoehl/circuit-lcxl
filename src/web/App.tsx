@@ -4,6 +4,8 @@ import { useState } from '@hookstate/core';
 import { store } from './state/store';
 import { startMqttController } from './state/control';
 import { CircuitComponent } from './ciruit';
+import { range } from '../shared/utils';
+import { KnobComponent } from './controls/KnobComponent';
 // import { VirtualControlRoot } from './controls/VirtualControlComponents';
 
 interface IAppState {
@@ -19,7 +21,7 @@ function App() {
 	return (
 		<div className="App">
 			{/* <div>
-				{range(11).map(i => <KnobComponent key={i} value={i * 0.1} label={i.toString()}/>)}
+				{range(127).map(i => i / 127).map(i => <KnobComponent key={i} value={i}  label={i.toFixed(3)}/>)}
 			</div> */}
 			{ isConnected 
 				? <CircuitComponent circuitState={state.circuit} />

@@ -26,7 +26,7 @@ export function KnobComponent(props: IKnobComponentProps) {
 					strokeWidth={radius / 10} 
 					className="_pie-background"
 					/>
-				<path d={`M ${lAnchor.x} ${-lAnchor.y} A ${innerRadius} ${innerRadius} 0 ${value > 0.5 ? 1 : 0} 1 ${valueCoords.x} ${-valueCoords.y}`}
+				<path d={`M ${lAnchor.x} ${-lAnchor.y} A ${innerRadius} ${innerRadius} 0 ${value >= 0.55 ? 1 : 0} 1 ${valueCoords.x} ${-valueCoords.y}`}
 					strokeWidth={radius / 30} 
 					className="_pie-foreground"
 					/>
