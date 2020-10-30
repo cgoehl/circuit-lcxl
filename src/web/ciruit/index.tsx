@@ -1,53 +1,9 @@
 import { State } from '@hookstate/core';
 import React from 'react';
-import { isLabeledStatement } from 'typescript';
-import { MidiParameter } from '../../shared/MidiParameter';
 import { UiGrid, UiParameter } from '../../shared/UiParameter';
-import { arrayToObject, compareBy } from '../../shared/utils';
 import { KnobComponent } from '../controls/KnobComponent';
 import { ICircuitPatchState, ICircuitState } from '../state/store';
 import './index.scss';
-
-
-// buildPatchLayout(circuit: NovationCircuit, number: number): IVirtualControlSection {
-// 	const createOscSection = (id: string): IVirtualControlSection => {
-// 		const items = [
-// 			`osc ${id} level`,
-// 			`osc ${id} wave`,
-// 			`osc ${id} wave interpolate`,
-// 			`osc ${id} pulse width index`,
-// 			`osc ${id} virtual sync depth`,
-// 			`osc ${id} density`,
-// 			`osc ${id} density detune`,
-// 			`osc ${id} semitones`,
-// 			`osc ${id} cents`,
-// 			`osc ${id} pitchbend`,
-// 		].map((paramName: string): IVirtualControlItem => {
-// 			const { sysexAddress, name } = circuit.parametersByName[paramName];
-// 			return {
-// 				type: 'knob',
-// 				id: this.patchParamTopic(number, sysexAddress),
-// 				label: name.replace(`osc ${id} `, ''),
-// 			};
-// 		});
-// 		return {
-// 			id: `vc/patch/${number}/sections/osc_${id}`,
-// 			type: 'section',
-// 			label: 'OSC1',
-// 			items,
-// 		}
-// 	}
-
-// 	return { 
-// 		id: 'vc',
-// 		type: 'section',
-// 		label: 'Circuit',
-// 		items: [
-// 			createOscSection('1'),
-// 			createOscSection('2'),
-// 		]
-// 	};
-// }
 
 export function CircuitPatchParameter(props: {
 	param: UiParameter,

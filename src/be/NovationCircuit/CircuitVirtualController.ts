@@ -59,8 +59,6 @@ export class CircuitVirtualContorller {
 				items,
 			}
 		}
-
 		return createOscSection('1');
 	}
-
 }
