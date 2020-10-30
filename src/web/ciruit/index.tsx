@@ -5,6 +5,7 @@ import { MidiParameter } from '../../shared/MidiParameter';
 import { arrayToObject, compareBy } from '../../shared/utils';
 import { KnobComponent } from '../controls/KnobComponent';
 import { ICircuitPatchState, ICircuitState } from '../state/store';
+import './index.scss';
 
 
 // buildPatchLayout(circuit: NovationCircuit, number: number): IVirtualControlSection {
@@ -58,7 +59,7 @@ export function CircuitPatchParameter(props: {
 	// }
 	const v = (value - minValue) / (maxValue - minValue);
 	return (
-		<div>
+		<div className='_param'>
 			<KnobComponent value={v} label={value?.toString()} />
 			<div>{name}</div>
 		</div>);
@@ -72,12 +73,14 @@ export function CircuitPatchComponent(props: {
 }) {
 	const { patchState, params } = props;
 	return (
-		<div>
-			<div>{patchState.name.get()}</div>
-			{Object.values(params).sort(compareBy((p: MidiParameter) => p.sysexAddress)).map((p: MidiParameter) => {
-				const value = patchState.bytes[p.sysexAddress].get();
-				return <CircuitPatchParameter value={value} param={p} key={p.name} />
-			})}
+		<div className='circuit-patch'>
+			<div className='_name'>{patchState.name.get()}</div>
+			<div className='_params'>
+				{Object.values(params).sort(compareBy((p: MidiParameter) => p.sysexAddress)).map((p: MidiParameter) => {
+					const value = patchState.bytes[p.sysexAddress].get();
+					return <CircuitPatchParameter value={value} param={p} key={p.name} />
+				})}
+			</div>
 		</div>
 	)
 }
