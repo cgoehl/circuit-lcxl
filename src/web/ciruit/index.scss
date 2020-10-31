@@ -2,6 +2,11 @@
 	._params {
 		display: grid;
 		grid-template-rows: auto;
-		grid-template-columns: auto auto auto auto auto auto auto auto;
+		// grid-template-columns: auto auto auto auto auto auto auto auto;
+	}
+
+	._null {
+		background-color: lime;
+		border: 1px solid black;
 	}
 }

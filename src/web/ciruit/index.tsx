@@ -5,7 +5,13 @@ import { KnobComponent } from '../controls/KnobComponent';
 import { ICircuitPatchState, ICircuitState } from '../state/store';
 import './index.scss';
 
-export function CircuitPatchParameter(props: {
+export function NullComponent() {
+	return (
+		<div className='_null'></div>
+	);
+}
+
+export function ParameterComponent(props: {
 	param: UiParameter,
 	value: number,
 }) {
@@ -20,11 +26,10 @@ export function CircuitPatchParameter(props: {
 			<KnobComponent value={v} label={value?.toString()} />
 			<div>{label}</div>
 		</div>);
-
-
 }
 
-export function CircuitPatchComponent(props: {
+
+export function GridComponent(props: {
 	patchState: State<ICircuitPatchState>,
 	// params: { [key: string]: MidiParameter },
 	layout: UiGrid,
@@ -32,18 +37,20 @@ export function CircuitPatchComponent(props: {
 	const { patchState, layout } = props;
 	return (
 		<div className='circuit-patch'>
-			<div className='_name'>{patchState.name.get()}</div>
-			<div className='_params'>
-				{layout.items.map((param: UiParameter) => {
+			<div className='_params' style={{ gridTemplateColumns: `repeat(${layout.columns}, 1fr)`}}>
+				{layout.items.map((param, index) => {
+					if (!param) {
+						return <NullComponent key={index} />
+					}
 					const value = patchState.bytes[param.address || -1].get();
-					return <CircuitPatchParameter value={value} param={param} key={param.address} />
+					return <ParameterComponent value={value} param={param} key={index} />
 				})}
 			</div>
 		</div>
 	)
 }
 
-export function CircuitComponent(props: { 
+export function LayoutComponent(props: { 
 	circuitState: State<ICircuitState>,
 	layout: UiGrid,
 }) {
@@ -51,7 +58,7 @@ export function CircuitComponent(props: {
 	// const paramsByName = arrayToObject(params, p => p.name);
 	return (
 		<div>
-			<CircuitPatchComponent patchState={circuitState.patch0} layout={layout} />
+			<GridComponent patchState={circuitState.patch0} layout={layout} />
 		</div>
 	);
 }

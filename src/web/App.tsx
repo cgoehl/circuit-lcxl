@@ -3,7 +3,7 @@ import './App.scss';
 import { useState } from '@hookstate/core';
 import { store } from './state/store';
 import { startMqttController } from './state/control';
-import { CircuitComponent } from './ciruit';
+import { GridComponent, LayoutComponent } from './ciruit';
 import { range } from '../shared/utils';
 import { KnobComponent } from './controls/KnobComponent';
 // import { VirtualControlRoot } from './controls/VirtualControlComponents';
@@ -25,7 +25,7 @@ function App() {
 				{range(127).map(i => i / 127).map(i => <KnobComponent key={i} value={i}  label={i.toFixed(3)}/>)}
 			</div> */}
 			{ isConnected && ui.layout
-				? <CircuitComponent circuitState={state.circuit} layout={ui.layout} />
+				? <LayoutComponent circuitState={state.circuit} layout={ui.layout} />
 				: 'Waiting for layout...' }
 		</div>
 	);
