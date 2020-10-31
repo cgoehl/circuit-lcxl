@@ -6,7 +6,7 @@ export interface MidiParameter {
 	sysexAddress: number;
 	protocol: MidiParameterProtocol;
 	orientation: 'centered' | 'zeroBased',
-	notes: string;
+	valueNames: null | { [key: string]: string },
 }
 
 export type MidiParameterProtocol = MidiCc | MidiNrpn;

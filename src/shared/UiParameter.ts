@@ -7,7 +7,8 @@ export interface UiParameter {
 	label: string,
 	minValue: number,
 	maxValue: number,
-	address?: number,
+	address: number,
+	valueNames: null | { [key: string]: string },
 }
 
 export interface UiGrid {

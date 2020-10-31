@@ -40,6 +40,8 @@ readonly rows: number,
 		}
 	}
 
+	at = (coords: IPoint2) => this.items[this.toIndex(coords)];
+
 	private toIndex = (coords: IPoint2) => coords.x + this.columns * coords.y;
 }
 
@@ -76,13 +78,14 @@ export class CircuitVirtualContorller {
 	buildUi = (): UiLayout => {
 
 		const midiToUi = (paramName: string, label?: string): UiParameter => {
-			const { sysexAddress, name, protocol: { minValue, maxValue } } = this.circuit.parametersByName[paramName];
+			const { sysexAddress, name, valueNames, protocol: { minValue, maxValue } } = this.circuit.parametersByName[paramName];
 			return {
 				type: 'parameter',
-				label: label || paramName,
+				label: label || name,
 				minValue,
 				maxValue,
 				address: sysexAddress,
+				valueNames,
 			};
 		}
 

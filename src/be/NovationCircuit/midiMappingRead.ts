@@ -30,6 +30,20 @@ const getSysexAddress = (str: string) : number => {
 	throw new Error(`No match for: ${str}`);
 }
 
+function convertNotes(notes: string): { [key: string]: string } | null {
+	if (notes && notes.length) {
+		const parts = notes.split('; ');
+		const matches = parts.map(p => /(\d+): (.*)/.exec(p));
+		if (!matches.every(m => m)) {
+			return null;
+		}
+		const res = {};
+		matches.forEach(([_, key, value]) => res[key] = value);
+		return res;
+	}
+	return null;
+}
+
 function convertRow(row: any): MidiParameter {
 	const {
 		manufacturer,
@@ -73,6 +87,6 @@ function convertRow(row: any): MidiParameter {
 		sysexAddress,
 		protocol,
 		orientation: orientation === 'Centered' ? 'centered' : 'zeroBased',
-		notes,
-	}
+		valueNames: convertNotes(notes),
+	};
 }
