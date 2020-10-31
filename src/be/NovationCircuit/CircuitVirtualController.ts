@@ -1,8 +1,10 @@
 import { create } from "domain";
+import { MidiParameter } from "../../shared/MidiParameter";
 import { UiGrid, UiParameter } from "../../shared/UiParameter";
 import { IPoint2 } from "../../shared/utils";
 import { IBroker } from "../Broker";
 import { Lcxl } from "../NovationLcxl";
+import { Knob } from "../PhysicalControl";
 import { NovationCircuit } from "./NovationCircuit";
 
 class UiLayout {
@@ -73,6 +75,21 @@ export class CircuitVirtualContorller {
 		const patchHandler = synthNumber => patch => broker.pub(`web/circuit/patch`, { patch, synthNumber });
 		circuit.patch0.on('changed', patchHandler(0));
 		circuit.patch1.on('changed', patchHandler(1));
+
+		await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload: Knob) => {
+			const { location: { col, row }, value } = payload;
+			if (value == null) { return;	}
+			const uiParam = this.layout.at({ x: col, y: row });
+			if (!uiParam) { return; }
+			const midiParam = circuit.parametersByAddress[uiParam.address];
+			if (!midiParam) { return; }
+			this.applyMidiParamChange(midiParam, value);
+		})
+	}
+
+	applyMidiParamChange = (midiParam: MidiParameter, value: number) => {
+		//TODO
+		throw new Error('todo');
 	}
 
 	buildUi = (): UiLayout => {
