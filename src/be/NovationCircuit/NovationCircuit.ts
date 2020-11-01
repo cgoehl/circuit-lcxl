@@ -1,5 +1,5 @@
 import { BaseDevice, detectMidi, IMidiIO } from '../BaseDevice';
-import { MidiParameter, MidiParameterProtocol, ParameterSection } from '../../shared/MidiParameter';
+import { MidiCc, MidiParameter, MidiParameterProtocol, ParameterSection } from '../../shared/MidiParameter';
 import { arrayToObject, compareBy, delay } from '../../shared/utils';
 import { circuitSysex } from './ciruitSysex';
 import { readControls as readMidiMapping } from './midiMappingRead';
@@ -41,9 +41,51 @@ export class NovationCircuit extends BaseDevice {
 		this.sendPatchDumpRequest(1);
 	}
 
+	announceState = () => {
+		this.raisePatchChange(0);
+		this.raisePatchChange(1);
+	}
+	
+	setMidiParam = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
+		const { protocol: { type }} = midiParam;
+		switch(type) {
+			case 'cc': {
+				this.setCcParam(synthNumber, midiParam.protocol as MidiCc, value);
+				break;
+			}
+			case 'nrpn': {
+				console.warn('not impl yet');
+				return;
+			}
+			default: throw new Error(`Type not implemented: ${type}`);
+		}
+		this.updatePatch(synthNumber, midiParam, value);
+	}
+
+	private updatePatch = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
+		const target = synthNumber === 0
+			? this.patch0
+			: this.patch1;
+		target.get().bytes[midiParam.sysexAddress] = value;
+		//todo this is a hack, maybe we should just remove the Property-class entirely
+		target.set(target.get());
+		this.raisePatchChange(synthNumber);
+	}
+
+	private setCcParam = (synthNumber: 0 | 1, protocol: MidiCc, value: number) => {
+		const { msb, lsb } = protocol;
+		if (lsb) {console.warn('Lsb for cc not impl yet');}
+		this.midi.output.send('cc', { channel: synthNumber, controller: msb, value });
+	}
+
+	private raisePatchChange = (synthNumber: 0 | 1) => {
+		synthNumber === 0
+			?	this.raiseEvent(['patch'], { patch: this.patch0.get(), synthNumber })
+			:	this.raiseEvent(['patch'], { patch: this.patch1.get(), synthNumber });
+	}
+	
 	private __currentDumpRequestSynth: number = 0;
-	// private __currentDumpRequestPatchExecutor: (p: CircuitPatch) => void = null;
-	sendPatchDumpRequest = (synth: number) => {
+	private sendPatchDumpRequest = (synth: number) => {
 		const msg = [
 			...circuitSysex.header,
 			circuitSysex.commands.currentPatchDump,
@@ -51,14 +93,10 @@ export class NovationCircuit extends BaseDevice {
 			...circuitSysex.footer,
 		]
 		this.midi.output.send('sysex' as any, msg as any);
-		// return new Promise<CircuitPatch>((resolve, reject) => {
-			this.__currentDumpRequestSynth = synth;
-			
-			// this.__currentDumpRequestPatchExecutor = resolve;
-		// });
+		this.__currentDumpRequestSynth = synth;
 	}
 
-	handleSysex = (msg: number[]): void => {
+	private handleSysex = (msg: number[]): void => {
 		const ci = circuitSysex.commandIndex;
 		const command = msg[ci];
 		switch (command) {
@@ -69,19 +107,13 @@ export class NovationCircuit extends BaseDevice {
 				synthNumber === 0
 					? this.patch0.set(patch)
 					: this.patch1.set(patch);
-				this.raiseEvent(['patch'], { patch, synthNumber });
+				this.raisePatchChange(1);				
 				break;
 			}
 			default: {
 				console.warn('Unsupported command', command, msg);
 			}
 		}
-	}
-
-	announceState = () => {
-		// this.raiseEvent(['params'], { parameters: this.flatParameters });
-		this.raiseEvent(['patch'], { patch: this.patch0.get(), synthNumber: 0 });
-		this.raiseEvent(['patch'], { patch: this.patch1.get(), synthNumber: 1 });
 	}
 
 	static deviceCount = 0;

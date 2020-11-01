@@ -18,6 +18,10 @@ export class Property<T> extends EventEmitter<{
 		this.emit('changed', value, old);
 	}
 
+	raise = () => {
+		
+	}
+
 	get = (): T => {
 		return this.value;
 	}

@@ -83,13 +83,12 @@ export class CircuitVirtualContorller {
 			if (!uiParam) { return; }
 			const midiParam = circuit.parametersByAddress[uiParam.address];
 			if (!midiParam) { return; }
-			this.applyMidiParamChange(midiParam, value);
+			this.applyUiParamChange(midiParam, value);
 		})
 	}
 
-	applyMidiParamChange = (midiParam: MidiParameter, value: number) => {
-		//TODO
-		throw new Error('todo');
+	applyUiParamChange = (midiParam: MidiParameter, value: number) => {
+		this.circuit.setMidiParam(0, midiParam, value);
 	}
 
 	buildUi = (): UiLayout => {
