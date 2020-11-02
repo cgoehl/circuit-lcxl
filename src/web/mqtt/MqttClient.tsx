@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { connect as mqttConnect, MqttClient as Mqtt} from 'mqtt';
 import { useState } from '@hookstate/core';
 
-
 export interface IMqttClientProps {
 	topics: string[],
 	onMessage: (message: String, topic: String) => void,

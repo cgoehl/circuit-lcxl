@@ -59,23 +59,3 @@ export async function startMqttController() {
 	const controller = new MqttController(client);
 	await controller.start();
 }
-
-// export function start() {
-			
-// 	const client = mqttConnect('ws://localhost:8080');
-// 	// const state = store.get();
-// 	// const topicPrefix = `web/${state.id}`;
-// 	const publish = (topic: string, obj: object) => 
-// 		client.publish(`${topicPrefix}/topic`, )
-
-// 	// client.on('connect', function () {
-// 	// 	client.publish(`web/`)
-// 	// })
-
-// 	// client.on('message', function (topic, message) {
-// 	// 	onMessage(message.toString(), topic);
-// 	// 	onConnect();
-// 	// })
-
-	
-// }
