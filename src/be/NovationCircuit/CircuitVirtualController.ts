@@ -94,13 +94,14 @@ export class CircuitVirtualContorller {
 	buildUi = (): UiLayout => {
 
 		const midiToUi = (paramName: string, label?: string): UiParameter => {
-			const { sysexAddress, name, valueNames, protocol: { minValue, maxValue } } = this.circuit.parametersByName[paramName];
+			const { sysexAddress, name, valueNames, orientation, protocol: { minValue, maxValue } } = this.circuit.parametersByName[paramName];
 			return {
 				type: 'parameter',
 				label: label || name,
 				minValue,
 				maxValue,
 				address: sysexAddress,
+				orientation,
 				valueNames,
 			};
 		}

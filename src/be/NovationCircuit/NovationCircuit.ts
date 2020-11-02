@@ -35,7 +35,7 @@ export class NovationCircuit extends BaseDevice {
 		this.parametersByAddress = arrayToObject(this.flatParameters, p => p.sysexAddress.toString());
 		const { input, output } = this.midi;
 		input.on('sysex' as any, (msg: any) => this.handleSysex(msg.bytes) as any);
-		input.on('program', message => this.sendPatchDumpRequest(message.channel));
+		input.on('program', message => this.sendPatchDumpRequest(message.channel as 0 | 1));
 		this.sendPatchDumpRequest(0);
 		await delay(200);
 		this.sendPatchDumpRequest(1);
@@ -84,8 +84,8 @@ export class NovationCircuit extends BaseDevice {
 			:	this.raiseEvent(['patch'], { patch: this.patch1.get(), synthNumber });
 	}
 	
-	private __currentDumpRequestSynth: number = 0;
-	private sendPatchDumpRequest = (synth: number) => {
+	private __currentDumpRequestSynth: 0 | 1 = 0;
+	private sendPatchDumpRequest = (synth: 0 | 1) => {
 		const msg = [
 			...circuitSysex.header,
 			circuitSysex.commands.currentPatchDump,
@@ -107,7 +107,7 @@ export class NovationCircuit extends BaseDevice {
 				synthNumber === 0
 					? this.patch0.set(patch)
 					: this.patch1.set(patch);
-				this.raisePatchChange(1);				
+				this.raisePatchChange(synthNumber);				
 				break;
 			}
 			default: {

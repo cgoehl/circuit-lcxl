@@ -8,6 +8,7 @@ export interface UiParameter {
 	minValue: number,
 	maxValue: number,
 	address: number,
+	orientation: 'centered' | 'zeroBased',
 	valueNames: null | { [key: string]: string },
 }
 
