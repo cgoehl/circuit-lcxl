@@ -8,28 +8,34 @@ import { Knob } from "../PhysicalControl";
 import { NovationCircuit } from "./NovationCircuit";
 
 class UiLayout {
-	
+
 	items: UiParameter[];
-	
-	constructor (
-readonly columns: number,
-readonly rows: number,		
+
+	constructor(
+		readonly columns: number,
+		readonly rows: number,
 	) {
 		this.items = Array.from(new Array<UiParameter>(columns * rows)).map(e => null);
 	}
 
-	add = (offset: IPoint2, width: number, items: UiParameter[]) => {
+	addRect = (offset: IPoint2, width: number, items: UiParameter[]) => {
 		items.forEach((item, i) => {
 			const x = offset.x + i % width;
 			const y = offset.y + Math.floor(i / width);
-			const thisIndex = this.toIndex({ x, y })
-			const existingItem = this.items[thisIndex];
-			if (existingItem) {
-				console.error('Attempt to insert into occupied slot:', x, y);
-			} else {
-				this.items[thisIndex] = item;
-			}
+			this.setAt({ x, y }, item);
 		});
+	}
+
+	addRow = (offset: IPoint2, items: UiParameter[]) => {
+		items.forEach((item, i) => {
+			const x = offset.x + i;
+			const y = offset.y;
+			this.setAt({ x, y }, item);
+		});
+	}
+
+	addCol = (offset: IPoint2, items: UiParameter[]) => {
+		this.addRect(offset, 1, items);
 	}
 
 	buildGrid = (): UiGrid => {
@@ -42,9 +48,23 @@ readonly rows: number,
 		}
 	}
 
-	at = (coords: IPoint2) => this.items[this.toIndex(coords)];
+	private setAt = (coords: IPoint2, item: UiParameter) => {
+		const thisIndex = this.toIndex(coords)
+		const existingItem = this.items[thisIndex];
+		if (existingItem) {
+			console.error('Attempt to insert into occupied slot:', coords);
+		} else {
+			this.items[thisIndex] = item;
+		}
+	}
 
-	private toIndex = (coords: IPoint2) => coords.x + this.columns * coords.y;
+	getAt = (coords: IPoint2) => this.items[this.toIndex(coords)];
+
+	private toIndex = (coords: IPoint2) => {
+		const { x, y } = coords;
+		if (x >= this.columns || y >= this.rows) throw new Error(`Coords out of bounds: (${x}|${y})`);
+		return x + this.columns * y;
+	};
 }
 
 export class CircuitVirtualContorller {
@@ -63,13 +83,8 @@ export class CircuitVirtualContorller {
 		const { broker, lcxl, circuit } = this;
 		lcxl.clearLeds();
 		await broker.sub(`web/hello`, async (payload: any) => {
-
-			broker.pub(
-				`web/ui`,
-				this.layout.buildGrid(),
-			);
+			broker.pub(`web/ui`, this.layout.buildGrid());
 			circuit.announceState();
-			lcxl.announceState();
 		});
 
 		const patchHandler = synthNumber => patch => broker.pub(`web/circuit/patch`, { patch, synthNumber });
@@ -78,8 +93,8 @@ export class CircuitVirtualContorller {
 
 		await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload: Knob) => {
 			const { location: { col, row }, value } = payload;
-			if (value == null) { return;	}
-			const uiParam = this.layout.at({ x: col, y: row });
+			if (value == null) { return; }
+			const uiParam = this.layout.getAt({ x: col, y: row });
 			if (!uiParam) { return; }
 			const midiParam = circuit.parametersByAddress[uiParam.address];
 			if (!midiParam) { return; }
@@ -92,12 +107,12 @@ export class CircuitVirtualContorller {
 	}
 
 	buildUi = (): UiLayout => {
-
-		const midiToUi = (paramName: string, label?: string): UiParameter => {
+		const midiToUi = (paramName: string, color: string, label?: string): UiParameter => {
 			const { sysexAddress, name, valueNames, orientation, protocol: { minValue, maxValue } } = this.circuit.parametersByName[paramName];
 			return {
 				type: 'parameter',
 				label: label || name,
+				color,
 				minValue,
 				maxValue,
 				address: sysexAddress,
@@ -106,6 +121,7 @@ export class CircuitVirtualContorller {
 			};
 		}
 
+		const layout = new UiLayout(16, 8);
 		const createOscItems = (id: string): UiParameter[] => {
 			return [
 				// `osc ${id} level`,
@@ -118,14 +134,107 @@ export class CircuitVirtualContorller {
 				`osc ${id} wave`,
 				`osc ${id} density`,
 				// `osc ${id} pitchbend`,
-			].map((paramName: string): UiParameter => 
-				midiToUi(paramName,  paramName.replace(`osc ${id} `, '')));
+			].map((paramName: string): UiParameter =>
+				midiToUi(paramName, `#aff`, paramName.replace(`osc ${id} `, '')));
 		}
-		
-		const layout = new UiLayout(8, 4);
-		layout.add({ x: 0, y: 0 }, 2, createOscItems('1') );
-		layout.add({ x: 2, y: 0 }, 2, createOscItems('2') );
+		const voiceItems = [
+			'Polyphony Mode',
+			'Portamento Rate',
+			'Pre-Glide',
+			'Keyboard Octave',
+		].map(name => midiToUi(name, '#afa'));
 
+		layout.addRect({ x: 0, y: 0 }, 2, createOscItems('1'));
+		layout.addRect({ x: 2, y: 0 }, 2, createOscItems('2'));
+		layout.addRow({ x: 4, y: 0}, voiceItems);
+
+
+
+		const filterItems = [
+			'routing',
+			'drive',
+			'drive type',
+			'type',
+			'frequency',
+			'tracking',
+			'resonance',
+			'Q normalise',
+			'env 2 to frequency',
+		];
+
+		const mixerItems = [
+			`osc 1 level`,
+			`osc 2 level`,
+			'ring mod level',
+			'noise level',
+			'pre FX level',
+			'post FX level',
+		];
+
+		const envItems = [
+			'env 2 to frequency',
+			'env 1 velocity',
+			'env 1 attack',
+			'env 1 decay',
+			'env 1 sustain',
+			'env 1 release',
+			'env 2 velocity',
+			'env 2 attack',
+			'env 2 decay',
+			'env 2 sustain',
+			'env 2 release',
+			'env 3 delay',
+			'env 3 attack',
+			'env 3 decay',
+			'env 3 sustain',
+			'env 3 release',
+		];
+
+		const lfoItems = [
+			'lfo 1 waveform',
+			'lfo 1 phase offset',
+			'lfo 1 slew rate',
+			'lfo 1 delay',
+			'lfo 1 delay sync',
+			'lfo 1 rate',
+			'lfo 1 rate sync',
+			'lfo 1 one shot',
+			'lfo 1 key sync',
+			'lfo 1 common sync',
+			'lfo 1 delay trigger',
+			'lfo 1 fade mode',
+			'lfo 2 waveform',
+			'lfo 2 phase offset',
+			'lfo 2 slew rate',
+			'lfo 2 delay',
+			'lfo 2 delay sync',
+			'lfo 2 rate',
+			'lfo 2 rate sync',
+			'lfo 2 one shot',
+			'lfo 2 key sync',
+			'lfo 2 common sync',
+			'lfo 2 delay trigger',
+			'lfo 2 fade mode',
+		];
+
+		const fxItems = [
+			'distortion level',
+			'chorus level',
+			'EQ bass frequency',
+			'EQ bass level',
+			'EQ mid frequency',
+			'EQ mid level',
+			'EQ treble frequency',
+			'EQ treble level',
+			'distortion type',
+			'distortion compensation',
+			'chorus type',
+			'chorus rate',
+			'chorus rate sync',
+			'chorus feedback',
+			'chorus mod depth',
+			'chorus delay',
+		];
 		return layout;
 	}
 }

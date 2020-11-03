@@ -5,6 +5,7 @@ export type UiControl
 export interface UiParameter {
 	type: 'parameter',
 	label: string,
+	color: string,
 	minValue: number,
 	maxValue: number,
 	address: number,

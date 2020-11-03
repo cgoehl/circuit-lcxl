@@ -8,7 +8,7 @@ export function ParameterComponent(props: {
 	value: number;
 }) {
 	const { value, param } = props;
-	const { label, minValue, maxValue, orientation } = param;
+	const { label, minValue, maxValue, orientation, color } = param;
 	
 	let labelValue = value === undefined ? NaN : value;
 	if (orientation === 'centered') {
@@ -16,8 +16,8 @@ export function ParameterComponent(props: {
 	}
 	const v = (value - minValue) / (maxValue - minValue);
 	return (
-		<div className='_param'>
-			<KnobComponent value={v} label={labelValue.toString()} />
-			<div>{label}</div>
+		<div className='_param' style={{ backgroundColor: color }}>
+			<KnobComponent value={v} label={labelValue.toString()} radius={25}/>
+			<div className='_label'>{label}</div>
 		</div>);
 }
