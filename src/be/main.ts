@@ -5,6 +5,7 @@ import { Knob } from './PhysicalControl';
 import { Channel, getInputs, getOutputs, Input, Note, Output } from 'easymidi';
 import { NovationCircuit } from './NovationCircuit/NovationCircuit';
 import { CircuitVirtualController } from './NovationCircuit/CircuitVirtualController';
+import { PhysicalVirtualAdapter } from "./NovationCircuit/PhysicalVirtualAdapter";
 import { delay } from '../shared/utils';
 
 mplx();
@@ -24,11 +25,16 @@ async function mplx() {
 	lcxl.clearLeds();
 	const circuit = await NovationCircuit.detect();
 	const c = new CircuitVirtualController(
-		lcxl,
 		circuit,
 		broker
 	);
 	await c.start();
+	const l = new PhysicalVirtualAdapter(
+		lcxl,
+		c,
+		broker
+	);
+	await l.start();
 	// await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload) => {
 	// 	const { location : { index, row, col }, value } = payload as Knob;
 	// 	broker.pub(`${lcxl.topicPrefix}/command/led/grid/byIdx/${index}`, { color: value });

@@ -1,31 +1,24 @@
-import { create } from "domain";
-import { MidiParameter } from "../../shared/MidiParameter";
 import { UiParameter } from "../../shared/UiParameter";
 import { IPoint2 } from "../../shared/utils";
 import { IBroker } from "../Broker";
-import { Lcxl } from "../NovationLcxl";
-import { Button, Knob } from "../PhysicalControl";
 import { NovationCircuit } from "./NovationCircuit";
 import { UiLayout } from "./UiLayout";
 
 export class CircuitVirtualController {
 
-	private controllerAnchor: IPoint2 = { x: 0, y: 0 };
 
 	constructor(
-		readonly lcxl: Lcxl,
 		readonly circuit: NovationCircuit,
 		readonly broker: IBroker,
 	) {
 		this.layout = this.buildUi();
 	}
 
-	private readonly layout: UiLayout;
+	readonly layout: UiLayout;
 
 
 	start = async () => {
-		const { broker, lcxl, circuit } = this;
-		lcxl.clearLeds();
+		const { broker, circuit } = this;
 		await broker.sub(`web/hello`, async (payload: any) => {
 			broker.pub(`web/ui/layout`, this.layout.buildGrid());
 			circuit.announceState();
@@ -34,41 +27,6 @@ export class CircuitVirtualController {
 		const patchHandler = synthNumber => patch => broker.pub(`web/circuit/patch`, { patch, synthNumber });
 		circuit.patch0.on('changed', patchHandler(0));
 		circuit.patch1.on('changed', patchHandler(1));
-
-		await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload: Knob) => {
-			const { location: { col, row }, value } = payload;
-			if (value == null) { return; }
-			const uiParam = this.layout.getAt({ x: col, y: row });
-			if (!uiParam) { return; }
-			const midiParam = circuit.parametersByAddress[uiParam.address];
-			if (!midiParam) { return; }
-			this.applyUiParamChange(midiParam, value);
-		})
-
-		await broker.sub(`${lcxl.topicPrefix}/event/button/direction/#`, (payload: Button) => {
-			const { location: { index }, isPressed } = payload;
-			if (!isPressed) { return; }
-			const { x, y } = this.controllerAnchor;
-			switch (index) {
-				case 0: this.setControllerAnchor({x, y: 0});
-				break;
-				case 1: this.setControllerAnchor({x, y: 4});
-				break;
-				case 2: this.setControllerAnchor({x: 0, y});
-				break;
-				case 3: this.setControllerAnchor({x: 8, y});
-				break;
-			}
-		});
-	}
-
-	setControllerAnchor = (coord: IPoint2) => {
-		this.controllerAnchor = coord;
-		this.broker.pub(`web/ui/controller`, this.controllerAnchor);
-	}
-
-	applyUiParamChange = (midiParam: MidiParameter, value: number) => {
-		this.circuit.setMidiParam(0, midiParam, value);
 	}
 
 	buildUi = (): UiLayout => {
