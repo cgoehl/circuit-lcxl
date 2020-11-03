@@ -13,22 +13,15 @@ class MqttController {
 	}
 
 	handleMessage = async (topic: string, payload: any) => {
-		if (/web\/ui/.test(topic)) {
-			console.log(payload)
+		if (/web\/ui\/layout/.test(topic)) {
 			store.ui.layout.set(payload);
+		} else if (/web\/ui\/controller/.test(topic)) {
+			store.ui.controller.set(payload);
 		} else if (/phy\/novation\/circuit\/\d+\/event\/patch/.test(topic)) {
 			const { patch, synthNumber } = payload;
 			synthNumber === 0
 				? store.circuit.patch0.set(patch)
 				: store.circuit.patch1.set(patch)
-		} else if (/phy\/novation\/lcxl\/\d+\/event\/knob\/grid/.test(topic)) {
-			const { location: { index }, value } = payload;
-			store.lcxl.knobs.merge(k => ({ [index]: value }));
-		} else if (/phy\/novation\/lcxl\/\d+\/event\/button\/grid/.test(topic)) {
-			const { location: { index }, value } = payload;
-			store.lcxl.buttons.merge(k => ({ [index]: value }));
-		} else {
-			// console.warn('unsupported topic:', topic);
 		}
 	}
 

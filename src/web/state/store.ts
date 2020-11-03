@@ -1,6 +1,7 @@
 import { createState, DevTools, State } from '@hookstate/core';
 import { MidiParameter } from '../../shared/MidiParameter';
 import { UiGrid } from '../../shared/UiParameter';
+import { IPoint2 } from '../../shared/utils';
 
 export interface ILcxlState {
 	knobs: {[key: string]: number | null}
@@ -24,6 +25,7 @@ export interface IAppState {
 	isMqttConnected: boolean,
 	ui: {
 		layout?: UiGrid,
+		controller?: IPoint2,
 	}
 	circuit: ICircuitState,
 	lcxl: ILcxlState,
