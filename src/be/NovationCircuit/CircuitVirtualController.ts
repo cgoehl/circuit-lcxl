@@ -67,7 +67,7 @@ class UiLayout {
 	};
 }
 
-export class CircuitVirtualContorller {
+export class CircuitVirtualController {
 	constructor(
 		readonly lcxl: Lcxl,
 		readonly circuit: NovationCircuit,
@@ -108,7 +108,9 @@ export class CircuitVirtualContorller {
 
 	buildUi = (): UiLayout => {
 		const midiToUi = (paramName: string, color: string, label?: string): UiParameter => {
-			const { sysexAddress, name, valueNames, orientation, protocol: { minValue, maxValue } } = this.circuit.parametersByName[paramName];
+			const param = this.circuit.parametersByName[paramName];
+			if (!param ) { throw new Error(`No such parameter: ${paramName}`); }
+			const { sysexAddress, name, valueNames, orientation, protocol: { minValue, maxValue } } = param;
 			return {
 				type: 'parameter',
 				label: label || name,
@@ -148,8 +150,6 @@ export class CircuitVirtualContorller {
 		layout.addRect({ x: 2, y: 0 }, 2, createOscItems('2'));
 		layout.addRow({ x: 4, y: 0}, voiceItems);
 
-
-
 		const filterItems = [
 			'routing',
 			'drive',
@@ -160,19 +160,10 @@ export class CircuitVirtualContorller {
 			'resonance',
 			'Q normalise',
 			'env 2 to frequency',
-		];
-
-		const mixerItems = [
-			`osc 1 level`,
-			`osc 2 level`,
-			'ring mod level',
-			'noise level',
-			'pre FX level',
-			'post FX level',
-		];
+		].map(name => midiToUi(name, '#cdc'));
+		layout.addRect({x: 8, y: 4}, 8, filterItems);
 
 		const envItems = [
-			'env 2 to frequency',
 			'env 1 velocity',
 			'env 1 attack',
 			'env 1 decay',
@@ -188,53 +179,89 @@ export class CircuitVirtualContorller {
 			'env 3 decay',
 			'env 3 sustain',
 			'env 3 release',
-		];
+		].map((name) => {
+			const [_, n, label] = /env (\d) (.*)/.exec(name);
+			const green = ((+n) + 10).toString(16);
+			const red = (13 - (+n)).toString(16);
+			return midiToUi(name, `#f${red}${green}f`, label);
+		});
 
-		const lfoItems = [
-			'lfo 1 waveform',
-			'lfo 1 phase offset',
-			'lfo 1 slew rate',
-			'lfo 1 delay',
-			'lfo 1 delay sync',
-			'lfo 1 rate',
-			'lfo 1 rate sync',
-			'lfo 1 one shot',
-			'lfo 1 key sync',
-			'lfo 1 common sync',
-			'lfo 1 delay trigger',
-			'lfo 1 fade mode',
-			'lfo 2 waveform',
-			'lfo 2 phase offset',
-			'lfo 2 slew rate',
-			'lfo 2 delay',
-			'lfo 2 delay sync',
-			'lfo 2 rate',
-			'lfo 2 rate sync',
-			'lfo 2 one shot',
-			'lfo 2 key sync',
-			'lfo 2 common sync',
-			'lfo 2 delay trigger',
-			'lfo 2 fade mode',
-		];
+		layout.addRect({ x: 3, y: 4 }, 5, envItems);
 
-		const fxItems = [
-			'distortion level',
-			'chorus level',
-			'EQ bass frequency',
-			'EQ bass level',
-			'EQ mid frequency',
-			'EQ mid level',
-			'EQ treble frequency',
-			'EQ treble level',
-			'distortion type',
-			'distortion compensation',
-			'chorus type',
-			'chorus rate',
-			'chorus rate sync',
-			'chorus feedback',
-			'chorus mod depth',
-			'chorus delay',
-		];
+		const addEqItems = () => {
+			const eqFreq = [
+				midiToUi('EQ bass frequency', '#cdd', 'bass freq'),
+				midiToUi('EQ mid frequency', '#dcd', 'mid freq'),
+				midiToUi('EQ treble frequency', '#ddc', 'high freq'),
+			];
+			const eqLevels = [
+				midiToUi('EQ bass level', '#cdd', 'bass level'),
+				midiToUi('EQ mid level', '#dcd', 'mid level'),
+				midiToUi('EQ treble level', '#ddc', 'high level'),
+			];
+			const mixerItems = [
+				midiToUi(`osc 1 level`, `#aff`),
+				midiToUi(`osc 2 level`, `#aff`),
+				midiToUi('ring mod level', `#aff`),
+				midiToUi('noise level', `#aff`),
+			];
+
+			const fxMixerItems = [
+				midiToUi('pre FX level', '#eee'),
+				midiToUi('post FX level', '#eee'),
+			];
+
+
+			layout.addRow({x: 0, y: 4}, fxMixerItems);
+			layout.addRow({x: 0, y: 6}, eqFreq);
+			layout.addRow({x: 0, y: 7}, [ ...eqLevels, ...mixerItems ]);
+		};
+		addEqItems();
+
+
+		const addLfoItems= (coords: IPoint2, lfoNum: 1 | 2) => {
+			const lfoItems = [
+				`lfo ${lfoNum} waveform`,
+				`lfo ${lfoNum} phase offset`,
+				`lfo ${lfoNum} slew rate`,
+				`lfo ${lfoNum} delay`,
+				`lfo ${lfoNum} delay sync`,
+				`lfo ${lfoNum} rate`,
+				`lfo ${lfoNum} rate sync`,
+				`lfo ${lfoNum} one shot`,
+				`lfo ${lfoNum} key sync`,
+				`lfo ${lfoNum} common sync`,
+				`lfo ${lfoNum} delay trigger`,
+				`lfo ${lfoNum} fade mode`,
+			]
+			.map(name => midiToUi(name, lfoNum === 1 ? `#daf` : `#adf`, name.replace(`lfo ${lfoNum} `, '')));
+			layout.addRect(coords, 3, lfoItems);
+		}
+
+		addLfoItems({ x: 10, y: 0}, 1);
+		addLfoItems({ x: 13, y: 0}, 2);
+
+		const addFxItems = () => {
+			const distortionItems = [
+				'distortion level',
+				'distortion type',
+				'distortion compensation',
+			].map(name => midiToUi(name, '#dbd', name.replace('distortion', 'dist.')));
+
+			const chorusItems = [
+				'chorus level',
+				'chorus type',
+				'chorus rate',
+				'chorus rate sync',
+				'chorus feedback',
+				'chorus mod depth',
+				'chorus delay',
+			].map(name => midiToUi(name, '#ddb', name.replace('distortion', 'dist.')));
+
+			layout.addCol({x: 7, y: 1}, distortionItems);
+			layout.addRect({x: 4, y: 1}, 3, chorusItems);
+		}
+		addFxItems();
 		return layout;
 	}
 }

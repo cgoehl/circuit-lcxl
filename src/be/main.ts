@@ -4,7 +4,7 @@ import { startBroker } from './Broker';
 import { Knob } from './PhysicalControl';
 import { Channel, getInputs, getOutputs, Input, Note, Output } from 'easymidi';
 import { NovationCircuit } from './NovationCircuit/NovationCircuit';
-import { CircuitVirtualContorller } from './NovationCircuit/CircuitVirtualController';
+import { CircuitVirtualController } from './NovationCircuit/CircuitVirtualController';
 import { delay } from '../shared/utils';
 
 mplx();
@@ -23,7 +23,7 @@ async function mplx() {
 	const lcxl = await Lcxl.detect();
 	lcxl.clearLeds();
 	const circuit = await NovationCircuit.detect();
-	const c = new CircuitVirtualContorller(
+	const c = new CircuitVirtualController(
 		lcxl,
 		circuit,
 		broker
