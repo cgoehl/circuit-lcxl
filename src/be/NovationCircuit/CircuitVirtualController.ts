@@ -30,47 +30,43 @@ export class CircuitVirtualController {
 	}
 
 	buildUi = (): UiLayout => {
-		const midiToUi = (paramName: string, color: string, label?: string): UiParameter => {
-			const param = this.circuit.parametersByName[paramName];
-			if (!param ) { throw new Error(`No such parameter: ${paramName}`); }
-			const { sysexAddress, name, valueNames, orientation, protocol: { minValue, maxValue } } = param;
-			return {
-				type: 'parameter',
-				label: label || name,
-				color,
-				minValue,
-				maxValue,
-				address: sysexAddress,
-				orientation,
-				valueNames,
-			};
-		}
+		
 
-		const layout = new UiLayout(16, 8);
-		const createOscItems = (id: string): UiParameter[] => {
-			return [
-				// `osc ${id} level`,
-				`osc ${id} semitones`,
-				`osc ${id} wave interpolate`,
-				`osc ${id} cents`,
-				`osc ${id} virtual sync depth`,
-				`osc ${id} pulse width index`,
-				`osc ${id} density detune`,
-				`osc ${id} wave`,
-				`osc ${id} density`,
-				// `osc ${id} pitchbend`,
-			].map((paramName: string): UiParameter =>
-				midiToUi(paramName, `#aff`, paramName.replace(`osc ${id} `, '')));
-		}
+		const layout = new UiLayout(this.circuit.parametersByName, 16, 8);
+
+		const osc1Items = [
+			// `osc 1 level`,
+			`osc 1 semitones`,
+			`osc 1 wave interpolate`,
+			`osc 1 cents`,
+			`osc 1 virtual sync depth`,
+			`osc 1 pulse width index`,
+			`osc 1 density detune`,
+			`osc 1 wave`,
+			`osc 1 density`,
+			// `osc 1 pitchbend`,
+		];
+		layout.addRect({ x: 0, y: 0 }, 2, osc1Items);
+		const osc2Items = [
+			// `osc 2 level`,
+			`osc 2 semitones`,
+			`osc 2 wave interpolate`,
+			`osc 2 cents`,
+			`osc 2 virtual sync depth`,
+			`osc 2 pulse width index`,
+			`osc 2 density detune`,
+			`osc 2 wave`,
+			`osc 2 density`,
+			// `osc 2 pitchbend`,
+		];
+		layout.addRect({ x: 2, y: 0 }, 2, osc2Items);
+
 		const voiceItems = [
 			'Polyphony Mode',
 			'Portamento Rate',
 			'Pre-Glide',
 			'Keyboard Octave',
-		].map(name => midiToUi(name, '#afa'));
-
-		layout.addRect({ x: 0, y: 0 }, 2, createOscItems('1'));
-		layout.addRect({ x: 2, y: 0 }, 2, createOscItems('2'));
+		];
 		layout.addRow({ x: 4, y: 0}, voiceItems);
 
 		const filterItems = [
@@ -83,7 +79,7 @@ export class CircuitVirtualController {
 			'resonance',
 			'Q normalise',
 			'env 2 to frequency',
-		].map(name => midiToUi(name, '#cdc'));
+		];
 		layout.addRect({x: 8, y: 4}, 8, filterItems);
 
 		const envItems = [
@@ -102,38 +98,31 @@ export class CircuitVirtualController {
 			'env 3 decay',
 			'env 3 sustain',
 			'env 3 release',
-		].map((name) => {
-			const [_, n, label] = /env (\d) (.*)/.exec(name);
-			const green = ((+n) + 10).toString(16);
-			const red = (13 - (+n)).toString(16);
-			return midiToUi(name, `#f${red}${green}f`, label);
-		});
-
+		];
 		layout.addRect({ x: 3, y: 4 }, 5, envItems);
 
 		const addEqItems = () => {
 			const eqFreq = [
-				midiToUi('EQ bass frequency', '#cdd', 'bass freq'),
-				midiToUi('EQ mid frequency', '#dcd', 'mid freq'),
-				midiToUi('EQ treble frequency', '#ddc', 'high freq'),
+				'EQ bass frequency',
+				'EQ mid frequency',
+				'EQ treble frequency',
 			];
 			const eqLevels = [
-				midiToUi('EQ bass level', '#cdd', 'bass level'),
-				midiToUi('EQ mid level', '#dcd', 'mid level'),
-				midiToUi('EQ treble level', '#ddc', 'high level'),
+				'EQ bass level',
+				'EQ mid level',
+				'EQ treble level',
 			];
 			const mixerItems = [
-				midiToUi(`osc 1 level`, `#aff`),
-				midiToUi(`osc 2 level`, `#aff`),
-				midiToUi('ring mod level', `#aff`),
-				midiToUi('noise level', `#aff`),
+				`osc 1 level`,
+				`osc 2 level`,
+				'ring mod level',
+				'noise level',
 			];
 
 			const fxMixerItems = [
-				midiToUi('pre FX level', '#eee'),
-				midiToUi('post FX level', '#eee'),
+				'pre FX level',
+				'post FX level',
 			];
-
 
 			layout.addRow({x: 0, y: 4}, fxMixerItems);
 			layout.addRow({x: 0, y: 6}, eqFreq);
@@ -156,11 +145,9 @@ export class CircuitVirtualController {
 				`lfo ${lfoNum} common sync`,
 				`lfo ${lfoNum} delay trigger`,
 				`lfo ${lfoNum} fade mode`,
-			]
-			.map(name => midiToUi(name, lfoNum === 1 ? `#daf` : `#adf`, name.replace(`lfo ${lfoNum} `, '')));
+			];
 			layout.addRect(coords, 3, lfoItems);
 		}
-
 		addLfoItems({ x: 10, y: 0}, 1);
 		addLfoItems({ x: 13, y: 0}, 2);
 
@@ -169,7 +156,7 @@ export class CircuitVirtualController {
 				'distortion level',
 				'distortion type',
 				'distortion compensation',
-			].map(name => midiToUi(name, '#dbd', name.replace('distortion', 'dist.')));
+			];
 
 			const chorusItems = [
 				'chorus level',
@@ -179,7 +166,7 @@ export class CircuitVirtualController {
 				'chorus feedback',
 				'chorus mod depth',
 				'chorus delay',
-			].map(name => midiToUi(name, '#ddb', name.replace('distortion', 'dist.')));
+			];
 
 			layout.addCol({x: 7, y: 1}, distortionItems);
 			layout.addRect({x: 4, y: 1}, 3, chorusItems);

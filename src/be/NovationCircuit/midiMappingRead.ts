@@ -46,47 +46,41 @@ function convertNotes(notes: string): { [key: string]: string } | null {
 
 function convertRow(row: any): MidiParameter {
 	const {
-		manufacturer,
-		device,
 		section,
 		parameter_name,
+		min,
+		max,
 		parameter_description,
 		cc_msb,
-		cc_lsb,
-		cc_min_value,
-		cc_max_value,
 		nrpn_msb,
 		nrpn_lsb,
-		nrpn_min_value,
-		nrpn_max_value,
 		orientation,
+		label,
+		color,
 		notes,
 	} = row;
 	const protocol: MidiParameterProtocol = cc_msb 
 	? {
 		type: 'cc',
 		msb: Number.parseInt(cc_msb),
-		lsb: Number.parseInt(cc_lsb),
-		minValue: Number.parseInt(cc_min_value),
-		maxValue: Number.parseInt(cc_max_value),
 	}
 	: {
 		type: 'nrpn',
 		msb: Number.parseInt(nrpn_msb),
 		lsb: Number.parseInt(nrpn_lsb),
-		minValue: Number.parseInt(nrpn_min_value),
-		maxValue: Number.parseInt(nrpn_max_value),
 	};
 	const sysexAddress = getSysexAddress(parameter_description);
 
 	return {
-		manufacturer,
-		device,
 		section,
 		name: parameter_name,
+		minValue: min,
+		maxValue: max,
 		sysexAddress,
 		protocol,
 		orientation: orientation === 'Centered' ? 'centered' : 'zeroBased',
+		label,
+		color,
 		valueNames: convertNotes(notes),
 	};
 }

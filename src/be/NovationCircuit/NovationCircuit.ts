@@ -1,5 +1,5 @@
 import { BaseDevice, detectMidi, IMidiIO } from '../BaseDevice';
-import { MidiCc, MidiParameter, MidiParameterProtocol, ParameterSection } from '../../shared/MidiParameter';
+import { MidiCc, MidiParameter } from '../../shared/MidiParameter';
 import { arrayToObject, compareBy, delay } from '../../shared/utils';
 import { circuitSysex } from './ciruitSysex';
 import { readControls as readMidiMapping } from './midiMappingRead';
@@ -73,8 +73,7 @@ export class NovationCircuit extends BaseDevice {
 	}
 
 	private setCcParam = (synthNumber: 0 | 1, protocol: MidiCc, value: number) => {
-		const { msb, lsb } = protocol;
-		if (lsb) {console.warn('Lsb for cc not impl yet');}
+		const { msb } = protocol;
 		this.midi.output.send('cc', { channel: synthNumber, controller: msb, value });
 	}
 
