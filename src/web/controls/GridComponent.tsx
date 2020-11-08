@@ -4,6 +4,7 @@ import { UiGrid } from '../../shared/UiParameter';
 import { IPoint2 } from '../../shared/utils';
 import { ICircuitPatchState } from '../state/store';
 import { ControllerComponent } from './ControllerComponent';
+import { EnumParameterComponent } from './EnumParameterComponent';
 import { NullComponent } from './NullComponent';
 import { ParameterComponent } from './ParameterComponent';
 
@@ -25,6 +26,9 @@ export function GridComponent(props: {
 							return <NullComponent key={index}/>;
 						}
 						const value = patchState.bytes[param.address || -1].get();
+						if (param.valueNames) {
+							return <EnumParameterComponent value={value} param={param} key={index} />;
+						}
 						return <ParameterComponent value={value} param={param} key={index} />;
 					}
 					return (

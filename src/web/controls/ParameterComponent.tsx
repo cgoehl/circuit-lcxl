@@ -20,4 +20,5 @@ export function ParameterComponent(props: {
 			<KnobComponent value={v} label={labelValue.toString()} radius={25}/>
 			<div className='_label'>{label}</div>
 		</div>);
+
 }
