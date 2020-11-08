@@ -1,5 +1,5 @@
 import { BaseDevice, detectMidi, IMidiIO } from '../BaseDevice';
-import { MidiCc, MidiParameter } from '../../shared/MidiParameter';
+import { MidiCc, MidiNrpn, MidiParameter } from '../../shared/MidiParameter';
 import { arrayToObject, compareBy, delay } from '../../shared/utils';
 import { circuitSysex } from './ciruitSysex';
 import { readControls as readMidiMapping } from './midiMappingRead';
@@ -54,8 +54,8 @@ export class NovationCircuit extends BaseDevice {
 				break;
 			}
 			case 'nrpn': {
-				console.warn('not impl yet');
-				return;
+				this.setNrpnParam(synthNumber, midiParam.protocol as MidiNrpn, value);
+				break;
 			}
 			default: throw new Error(`Type not implemented: ${type}`);
 		}
@@ -77,6 +77,12 @@ export class NovationCircuit extends BaseDevice {
 		this.midi.output.send('cc', { channel: synthNumber, controller: msb, value });
 	}
 
+	private setNrpnParam = (synthNumber: 0 | 1, protocol: MidiNrpn, value: number) => {
+		const { msb, lsb } = protocol;
+		this.midi.output.send('cc', { channel: synthNumber, controller: 99, value: msb });
+		this.midi.output.send('cc', { channel: synthNumber, controller: 98, value: lsb });
+		this.midi.output.send('cc', { channel: synthNumber, controller: 6, value });
+	}
 	private raisePatchChange = (synthNumber: 0 | 1) => {
 		synthNumber === 0
 			?	this.raiseEvent(['patch'], { patch: this.patch0.get(), synthNumber })
