@@ -89,8 +89,8 @@ async function funnyLightsGame() {
 	console.log('inputs', getInputs());
 	console.log('outputs', getOutputs());
 
-	const broker = await startBroker();
-	const lcxl = Lcxl.detect();
+	// const broker = await startBroker();
+	// const lcxl = Lcxl.detect();
 	// const { midi: { input, output }} = lcxl;
 
 	const isLcxl = (name: String) => name.includes('Launch Control XL');

@@ -1,4 +1,4 @@
-import { getInputs, getOutputs, Input, Output, Channel, Note } from 'easymidi';
+import { getInputs, getOutputs, Input, Output, Channel, Note, ControlChange } from 'easymidi';
 import { BaseDevice, detectMidi, ICommand, IMidiIO } from '../BaseDevice';
 import { Knob, Button } from '../PhysicalControl';
 import { range } from '../../shared/utils';
@@ -32,6 +32,12 @@ class LcxlLedEncoder {
 		const index = Math.floor(rangeOut * relativeIn);
 		return this.colorCodes[this.rangeColors[index]];
 	};
+
+	getColor = (color: number | string) => {
+		return typeof color === 'string'
+			? this.colorCodes[color]
+			: this.colorCodeInRange(color);
+	}
 }
 
 export class Lcxl extends BaseDevice {
@@ -72,11 +78,19 @@ export class Lcxl extends BaseDevice {
 	leftRightButtons: Button[] = [];
 
 	private setNoteLed = (note: number) => (color: number | string) => {
-		const value = typeof color === 'string'
-			? Lcxl.ledEncoder.colorCodes[color]
-			: Lcxl.ledEncoder.colorCodeInRange(color);
+		const value = Lcxl.ledEncoder.getColor(color);
 		const message: Note = { channel: 8, note, velocity: value };
 		this.midi.output.send('noteon', message);
+	}
+
+	private setCcLed = (controller: number) => (color: number | string) => {
+		const value = Lcxl.ledEncoder.getColor(color);
+		const message: ControlChange = { channel: 8, controller, value };
+		this.midi.output.send('cc', message);
+	}
+
+	setDirectionLed = (index: number, color: number | string): void => {
+		this.setCcLed(104 + index)(color);
 	}
 
 	setGridLed = (index: number, color: number | string): void => 

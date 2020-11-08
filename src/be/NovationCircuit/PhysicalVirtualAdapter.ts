@@ -1,5 +1,5 @@
 import { MidiParameter } from "../../shared/MidiParameter";
-import { IPoint2 } from "../../shared/utils";
+import { IPoint2, range } from "../../shared/utils";
 import { IBroker } from "../Broker";
 import { Lcxl } from "../NovationLcxl";
 import { Button, Knob } from "../PhysicalControl";
@@ -20,21 +20,12 @@ export class PhysicalVirtualAdapter {
 		const { broker, lcxl, virtual } = this;
 		lcxl.clearLeds();
 		await broker.sub(`web/hello`, async (payload: any) => {
-			this.setControllerAnchor(this.controllerAnchor);
+			this.setPage(0);
 		});
 		await broker.sub(`${lcxl.topicPrefix}/event/button/direction/#`, (payload: Button) => {
 			const { location: { index }, isPressed } = payload;
 			if (!isPressed) { return; }
-			switch (index) {
-				case 0: this.setControllerAnchor({ x: 0, y: 0 });
-					break;
-				case 1: this.setControllerAnchor({ x: 8, y: 0 });
-					break;
-				case 2: this.setControllerAnchor({ x: 0, y: 4 });
-					break;
-				case 3: this.setControllerAnchor({ x: 8, y: 4 });
-					break;
-			}
+			this.setPage(index);
 		});
 		await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload: Knob) => {
 			const { location: { col, row }, value } = payload;
@@ -55,8 +46,20 @@ export class PhysicalVirtualAdapter {
 		this.virtual.circuit.setMidiParam(0, midiParam, value);
 	};
 
-	setControllerAnchor = (coord: IPoint2) => {
-		this.controllerAnchor = coord;
+	setPage = (index: number) => {
+		switch (index) {
+			case 0: this.controllerAnchor = ({ x: 0, y: 0 });
+				break;
+			case 1: this.controllerAnchor = ({ x: 8, y: 0 });
+				break;
+			case 2: this.controllerAnchor = ({ x: 0, y: 4 });
+				break;
+			case 3: this.controllerAnchor = ({ x: 8, y: 4 });
+				break;
+		}
+		range(4).forEach(i => {
+			this.lcxl.setDirectionLed(i, i === index ? 'redH' : 'off');
+		});
 		this.broker.pub(`web/ui/controller`, this.controllerAnchor);
-	};
+	}
 }
