@@ -18,8 +18,8 @@ export function LayoutComponent(props: {
 	// const paramsByName = arrayToObject(params, p => p.name);
 	return (
 		<div>
+			<MatrixComponent patchState={circuitState.patch0} layout={layout.matrix as UiModMatrix}/>
 			<GridComponent patchState={circuitState.patch0} layout={layout.knobs as UiGrid} controllerAnchor={controllerAnchor} />
-			{/* <MatrixComponent patchState={circuitState.patch0} layout={layout.matrix as UiModMatrix}/> */}
 		</div>
 	);
 }

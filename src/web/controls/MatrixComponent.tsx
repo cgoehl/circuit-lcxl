@@ -27,6 +27,7 @@ export function MatrixSlotComponent(props: {
 	} = props;
 	return (
 		<div className='_slot'>
+			<div className='_number'>{slotNumber}</div>
 			<EnumParameterComponent value={source1} param={{ label: 'Source 1', color: '#def', valueNames: sources }} />
 			<EnumParameterComponent value={source2} param={{ label: 'Source 2', color: '#def', valueNames: sources }} />
 			<ParameterComponent value={depth} param={{ label: 'Depth', minValue: 0, maxValue: 127, orientation: 'centered', color: '#fde' }} />
@@ -39,11 +40,11 @@ export function MatrixComponent(props: {
 	patchState: State<ICircuitPatchState>,
 	layout: UiModMatrix,
 }) {
-	const {  layout: { slots, sources, destinations }, patchState } = props;
+	const { layout: { slots, sources, destinations }, patchState } = props;
 	const getValue = (address: number) => patchState.bytes[address || -1].get();
 	return (
-		<div className='.mod-matrix'>
-			{slots.map(slot => {
+		<div className='mod-matrix'>
+			{slots.map((slot, i) => {
 				const {
 					slotNumber,
 					source1Address,
@@ -52,7 +53,7 @@ export function MatrixComponent(props: {
 					destinationAddress,
 				} = slot;
 				return <MatrixSlotComponent 
-					key={slotNumber}
+					key={i}
 					slotNumber={slotNumber}
 					sources={sources}
 					destinations={destinations}
