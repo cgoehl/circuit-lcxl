@@ -1,19 +1,18 @@
 import React from 'react';
-import { UiParameter } from '../../shared/UiParameter';
-import { compareBy } from '../../shared/utils';
-
+import './EnumParameterComponent.scss';
 
 export function EnumParameterComponent(props: {
-	param: UiParameter;
-	value: number;
+	param: { 
+		label: string, 
+		color: string, 
+		valueNames: { [value: string]: string } | null
+	},
+	value: number,
 }) {
 	const { value, param } = props;
 	const { label, color, valueNames } = param;
 
 	const vn = valueNames || {};
-	// const sorted = Object.entries(vn).sort(compareBy((a: any) => a[0]));
-	// const active = sorted.findIndex
-
 	const renderRow = (v: number) => {
 		const entry = vn[v];
 		return entry
@@ -22,7 +21,7 @@ export function EnumParameterComponent(props: {
 	}
 
 	return (
-		<div className='_enum' style={{ backgroundColor: color }}>
+		<div className='enum-parameter' style={{ backgroundColor: color }}>
 			<div className='_enum-values'>
 				{renderRow(value - 2)}
 				{renderRow(value - 1)}

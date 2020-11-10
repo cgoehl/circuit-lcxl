@@ -13,8 +13,10 @@ class MqttController {
 	}
 
 	handleMessage = async (topic: string, payload: any) => {
-		if (/web\/ui\/layout/.test(topic)) {
-			store.ui.layout.set(payload);
+		if (/web\/ui\/layout\/knobs/.test(topic)) {
+			store.ui.layout.knobs.set(payload);
+		} else if (/web\/ui\/layout\/mod-matrix/.test(topic)) {
+			store.ui.layout.matrix.set(payload);
 		} else if (/web\/ui\/controller/.test(topic)) {
 			store.ui.controller.set(payload);
 		} else if (/phy\/novation\/circuit\/\d+\/event\/patch/.test(topic)) {
@@ -23,6 +25,7 @@ class MqttController {
 				? store.circuit.patch0.set(patch)
 				: store.circuit.patch1.set(patch)
 		}
+		// console.log(JSON.stringify(store.get(), null, 2));
 	}
 
 	start = async () => {

@@ -1,6 +1,6 @@
 import { createState, DevTools, State } from '@hookstate/core';
 import { MidiParameter } from '../../shared/MidiParameter';
-import { UiGrid } from '../../shared/UiParameter';
+import { UiGrid, UiModMatrix } from '../../shared/UiParameter';
 import { IPoint2 } from '../../shared/utils';
 
 export interface ILcxlState {
@@ -20,23 +20,29 @@ export interface ICircuitState {
 	patch1: ICircuitPatchState;
 }
 
+export interface ILayoutState {
+	matrix?: UiModMatrix,
+	knobs?: UiGrid,
+}
+
 export interface IAppState {
 	id: string,
 	isMqttConnected: boolean,
 	ui: {
-		layout?: UiGrid,
+		layout: ILayoutState,
 		controller?: IPoint2,
 	}
 	circuit: ICircuitState,
 	lcxl: ILcxlState,
-
 };
 
 function buildStore() {
 	const store = createState<IAppState>({
 		id: Math.random().toString(),
 		isMqttConnected: false,
-		ui: {},
+		ui: {
+			layout: {}
+		},
 		circuit: {
 			patch0: { bytes: [], name: '', category: 0, genre: 0},
 			patch1: { bytes: [], name: '', category: 0, genre: 0},

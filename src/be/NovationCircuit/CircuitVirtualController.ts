@@ -1,5 +1,5 @@
-import { UiParameter } from "../../shared/UiParameter";
-import { IPoint2 } from "../../shared/utils";
+import { UiModMatrix, UiModMatrixSlot, UiParameter } from "../../shared/UiParameter";
+import { IPoint2, range } from "../../shared/utils";
 import { IBroker } from "../Broker";
 import { NovationCircuit } from "./NovationCircuit";
 import { UiLayout } from "./UiLayout";
@@ -11,7 +11,7 @@ export class CircuitVirtualController {
 		readonly circuit: NovationCircuit,
 		readonly broker: IBroker,
 	) {
-		this.layout = this.buildUi();
+		this.layout = this.buildKnobUi();
 	}
 
 	readonly layout: UiLayout;
@@ -20,7 +20,8 @@ export class CircuitVirtualController {
 	start = async () => {
 		const { broker, circuit } = this;
 		await broker.sub(`web/hello`, async (payload: any) => {
-			broker.pub(`web/ui/layout`, this.layout.buildGrid());
+			broker.pub(`web/ui/layout/knobs`, this.layout.buildGrid());
+			broker.pub(`web/ui/layout/mod-matrix`, this.buildModMatrixUi());
 			circuit.announceState();
 		});
 
@@ -29,9 +30,24 @@ export class CircuitVirtualController {
 		circuit.patch1.on('changed', patchHandler(1));
 	}
 
-	buildUi = (): UiLayout => {
-		
+	buildModMatrixUi = (): UiModMatrix => {
+		const baseAddress = 124;
+		const slots: UiModMatrixSlot[] = range(20)
+			.map(i => ({
+				slotNumber: i + 1,
+				source1Address: baseAddress + i * 4,
+				source2Address: baseAddress + i * 4 + 1,
+				depthAddress: baseAddress + i * 4 + 2,
+				destinationAddress: baseAddress + i * 4 + 3,
+			}));
+		return {
+			sources: this.circuit.parametersByName['mod matrix 1 source 1'].valueNames,
+			destinations: this.circuit.parametersByName['mod matrix 1 destination'].valueNames,
+			slots,
+		}
+	}
 
+	buildKnobUi = (): UiLayout => {
 		const layout = new UiLayout(this.circuit.parametersByName, 16, 8);
 
 		const osc1Items = [

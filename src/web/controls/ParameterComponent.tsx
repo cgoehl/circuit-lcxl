@@ -1,10 +1,15 @@
 import React from 'react';
-import { UiParameter } from '../../shared/UiParameter';
 import { KnobComponent } from '../controls/KnobComponent';
-
+import './ParameterComponent.scss';
 
 export function ParameterComponent(props: {
-	param: UiParameter;
+	param: {
+		label: string,
+		minValue: number,
+		maxValue: number,
+		orientation: string,
+		color: string,
+	};
 	value: number;
 }) {
 	const { value, param } = props;
@@ -16,8 +21,8 @@ export function ParameterComponent(props: {
 	}
 	const v = (value - minValue) / (maxValue - minValue);
 	return (
-		<div className='_param' style={{ backgroundColor: color }}>
-			<KnobComponent value={v} label={labelValue.toString()} radius={25}/>
+		<div className='parameter' style={{ backgroundColor: color }}>
+			<KnobComponent value={v} label={labelValue.toString()} radius={40}/>
 			<div className='_label'>{label}</div>
 		</div>);
 

@@ -5,13 +5,14 @@ import { IPoint2 } from '../../shared/utils';
 import { ICircuitPatchState } from '../state/store';
 import { ControllerComponent } from './ControllerComponent';
 import { EnumParameterComponent } from './EnumParameterComponent';
+import { MatrixComponent } from './MatrixComponent';
 import { NullComponent } from './NullComponent';
 import { ParameterComponent } from './ParameterComponent';
 
 
 export function GridComponent(props: {
-	patchState: State<ICircuitPatchState>;
-	layout: UiGrid;
+	patchState: State<ICircuitPatchState>,
+	layout: UiGrid,
 	controllerAnchor: IPoint2,
 }) {
 	const { patchState, layout, controllerAnchor } = props;

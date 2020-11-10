@@ -21,7 +21,7 @@ function App() {
 			{/* <div>
 				{range(127).map(i => i / 127).map(i => <KnobComponent key={i} value={i}  label={i.toFixed(3)}/>)}
 			</div> */}
-			{ isConnected && ui.layout
+			{ isConnected && ui.layout.knobs && ui.layout.matrix
 				? <LayoutComponent circuitState={state.circuit} layout={ui.layout} controllerAnchor={ui.controller || {x: 0, y: 0}} />
 				: 'Waiting for layout...' }
 		</div>
