@@ -63,7 +63,8 @@ export class UiLayout {
 		return x + this.columns * y;
 	};
 
-	private createUi = (name: string): UiParameter => {
+	private createUi = (name: string): UiParameter | null => {
+		if (name === '---') { return null; }
 		const param = this.parameters[name];
 		if (!param ) { throw new Error(`No such parameter: ${name}`); }
 		const { sysexAddress, valueNames, orientation, minValue, maxValue, color, label } = param;

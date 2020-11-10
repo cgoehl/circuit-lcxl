@@ -71,16 +71,16 @@ export class CircuitVirtualController {
 
 		const filterItems = [
 			'routing',
-			'drive',
+			'Q normalise',
+			'tracking',
 			'drive type',
 			'type',
+			'drive',
 			'frequency',
-			'tracking',
 			'resonance',
-			'Q normalise',
-			'env 2 to frequency',
 		];
-		layout.addRect({x: 8, y: 4}, 8, filterItems);
+		layout.addRect({x: 8, y: 0}, 2, filterItems);
+		layout.addRow({x: 2, y: 5}, ['env 2 to frequency']);
 
 		const envItems = [
 			'env 1 velocity',
@@ -153,19 +153,21 @@ export class CircuitVirtualController {
 
 		const addFxItems = () => {
 			const distortionItems = [
-				'distortion level',
 				'distortion type',
 				'distortion compensation',
+				'distortion level',
 			];
 
 			const chorusItems = [
-				'chorus level',
+				'---',
+				'---',
 				'chorus type',
-				'chorus rate',
-				'chorus rate sync',
-				'chorus feedback',
 				'chorus mod depth',
+				'chorus rate sync',
+				'chorus rate',
 				'chorus delay',
+				'chorus feedback',
+				'chorus level',
 			];
 
 			layout.addCol({x: 7, y: 1}, distortionItems);
