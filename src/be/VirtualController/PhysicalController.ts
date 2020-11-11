@@ -3,7 +3,7 @@ import { IPoint2, range } from "../../shared/utils";
 import { IBroker } from "../Broker";
 import { Lcxl } from "../NovationLcxl";
 import { Button, Knob } from "../PhysicalControl";
-import { CircuitVirtualController } from "./CircuitVirtualController";
+import { CircuitVirtualController } from "./WebController";
 
 
 export class PhysicalVirtualAdapter {

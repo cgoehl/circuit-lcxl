@@ -4,8 +4,8 @@ import { startBroker } from './Broker';
 import { Knob } from './PhysicalControl';
 import { Channel, getInputs, getOutputs, Input, Note, Output } from 'easymidi';
 import { NovationCircuit } from './NovationCircuit/NovationCircuit';
-import { CircuitVirtualController } from './NovationCircuit/CircuitVirtualController';
-import { PhysicalVirtualAdapter } from "./NovationCircuit/PhysicalVirtualAdapter";
+import { CircuitVirtualController } from './VirtualController/WebController';
+import { PhysicalVirtualAdapter } from "./VirtualController/PhysicalController";
 import { delay } from '../shared/utils';
 
 mplx();

@@ -1,7 +1,7 @@
 import { UiModMatrix, UiModMatrixSlot, UiParameter } from "../../shared/UiParameter";
 import { IPoint2, range } from "../../shared/utils";
 import { IBroker } from "../Broker";
-import { NovationCircuit } from "./NovationCircuit";
+import { NovationCircuit } from "../NovationCircuit/NovationCircuit";
 import { UiLayout } from "./UiLayout";
 
 export class CircuitVirtualController {
@@ -15,7 +15,6 @@ export class CircuitVirtualController {
 	}
 
 	readonly layout: UiLayout;
-
 
 	start = async () => {
 		const { broker, circuit } = this;
