@@ -1,8 +1,16 @@
+import { IPoint2 } from "./utils";
+
 export type UiControl 
 	=	UiParameter
 	| UiGrid;
 
 export type UiOrientation = 'centered' | 'zeroBased';
+
+export interface UiState {
+	controllerAnchor: IPoint2,
+	controllerPage: number,
+	synthNumber: 0 | 1,
+}
 
 export interface UiParameter {
 	type: 'parameter',

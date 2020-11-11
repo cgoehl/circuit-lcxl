@@ -1,16 +1,26 @@
-import { UiModMatrix, UiModMatrixSlot, UiParameter } from "../../shared/UiDtos";
+import { EventEmitter } from "tsee";
+import { UiModMatrix, UiModMatrixSlot, UiParameter, UiState } from "../../shared/UiDtos";
 import { IPoint2, range } from "../../shared/utils";
 import { IBroker } from "../Broker";
 import { NovationCircuit } from "../NovationCircuit/NovationCircuit";
 import { UiLayout } from "./UiLayout";
 
-export class CircuitVirtualController {
+export class CircuitVirtualController extends EventEmitter<{
+	changed: (newValue: UiState) => void,
+}>{
 
+	private state : UiState = {
+		controllerPage: 0,
+		controllerAnchor: { x: 0, y: 0 },
+		synthNumber: 0
+	};
+	// private controllerAnchor: IPoint2 = { x: 0, y: 0 };
 
 	constructor(
 		readonly circuit: NovationCircuit,
 		readonly broker: IBroker,
 	) {
+		super();
 		this.layout = this.buildKnobUi();
 	}
 
@@ -21,6 +31,7 @@ export class CircuitVirtualController {
 		await broker.sub(`web/hello`, async (payload: any) => {
 			broker.pub(`web/ui/layout/knobs`, this.layout.buildGrid());
 			broker.pub(`web/ui/layout/mod-matrix`, this.buildModMatrixUi());
+			this.updateState(s => s);
 			circuit.announceState();
 		});
 
@@ -44,6 +55,24 @@ export class CircuitVirtualController {
 			destinations: this.circuit.parametersByName['mod matrix 1 destination'].valueNames,
 			slots,
 		}
+	}
+
+	handleControlChange = (col: number, row: number, value: number) => {
+		const { x, y } = this.state.controllerAnchor;
+		if (value == null) { return; }
+		const absVKnob = { x: col + x, y: row + y };
+		console.log(absVKnob);
+		const uiParam = this.layout.getAt(absVKnob);
+		if (!uiParam) { return; }
+		const midiParam = this.circuit.parametersByAddress[uiParam.address];
+		if (!midiParam) { return; }
+		this.circuit.setMidiParam(this.state.synthNumber, midiParam, value);
+	}
+
+	updateState = (func: (UiState) => UiState) => {
+		this.state = func(this.state);
+		this.emit('changed', this.state);
+		this.broker.pub(`web/ui/state`, this.state);
 	}
 
 	buildKnobUi = (): UiLayout => {

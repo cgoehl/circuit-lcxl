@@ -17,8 +17,8 @@ class MqttController {
 			store.ui.layout.knobs.set(payload);
 		} else if (/web\/ui\/layout\/mod-matrix/.test(topic)) {
 			store.ui.layout.matrix.set(payload);
-		} else if (/web\/ui\/controller/.test(topic)) {
-			store.ui.controller.set(payload);
+		} else if (/web\/ui\/state/.test(topic)) {
+			store.ui.state.set(payload);
 		} else if (/phy\/novation\/circuit\/\d+\/event\/patch/.test(topic)) {
 			const { patch, synthNumber } = payload;
 			synthNumber === 0
