@@ -1,5 +1,5 @@
-import { getInputs, getOutputs, Input, Output, Channel, Note, ControlChange } from 'easymidi';
-import { BaseDevice, detectMidi, ICommand, IMidiIO } from '../BaseDevice';
+import { Note, ControlChange } from 'easymidi';
+import { BaseDevice, detectMidi, IMidiIO } from '../BaseDevice';
 import { Knob, Button } from '../PhysicalControl';
 import { range } from '../../shared/utils';
 
@@ -40,7 +40,12 @@ class LcxlLedEncoder {
 	}
 }
 
-export class Lcxl extends BaseDevice {
+export class Lcxl extends BaseDevice<{
+	knob: (knob: Knob) => void;
+	directionButton: (button: Button) => void;
+	sideButton: (button: Button) => void;
+	gridButton: (button: Button) => void;
+}> {
 	
 	private static knobLedNotes = [
 		13, 29, 45, 61, 77, 93, 109, 125,
@@ -100,24 +105,8 @@ export class Lcxl extends BaseDevice {
 		range(Lcxl.gridLedNotes.length).forEach(i => this.setGridLed(i, 'off'));
 	}
 
-	constructor(
-		midi: IMidiIO,
-		instance: string,
-		) {
-		super({
-			vendor: 'novation',
-			model: 'lcxl',
-			instance,
-		}, midi);
-	}
 
 	init = async () => {
-		
-		await this.registerCommand('led/grid/byIdx/+', (payload, topic) => {
-			const idx = topic[topic.length - 1];
-			const { color } = payload as any;
-			this.setGridLed(+idx, color);
-		});
 
 		const knobCCLookup : { [controller: string]: Knob }= {};
 		Lcxl.knobCC.forEach((cc, index) => {
@@ -130,7 +119,7 @@ export class Lcxl extends BaseDevice {
 			this.knobGrid.push(knob);
 			knobCCLookup[cc] = knob;
 		});
-		const buttonCCLookup : { [controller: string]: Button }= {};
+		const buttonCCLookup : { [controller: string]: Button } = {};
 		Lcxl.upDownButtonCC.forEach((cc, index) => {
 			const button = new Button({ 
 				section:'direction', 
@@ -159,12 +148,12 @@ export class Lcxl extends BaseDevice {
 			const knob = knobCCLookup[controller];
 			if (knob) {
 				knob.value = value;
-				this.raiseEvent(knob.getTopicPath(), knob);
+				this.emit('knob', knob);
 			}
 			const button = buttonCCLookup[controller];
 			if (button) {
 				button.isPressed = value === 127;
-				this.raiseEvent(button.getTopicPath(), button);
+				this.emit('directionButton', button);
 			}
 		});
 
@@ -196,22 +185,15 @@ export class Lcxl extends BaseDevice {
 			const button = buttonNoteLookup[note];
 			if (button) {
 				button.isPressed = eventType === 'noteon';
-				this.raiseEvent(button.getTopicPath(), button);
+				button.location.section === 'grid'
+					? this.emit('gridButton', button)
+					: this.emit('sideButton', button);
 			}
 		}
 		input.on('noteon', handleNote('noteon'));
 		input.on('noteoff', handleNote('noteoff'));
 	}
 
-	announceState = () => {
-		this.knobGrid.forEach(knob => this.raiseEvent(knob.getTopicPath(), knob));
-		[
-			...this.buttonGrid,
-			...this.sideButtons,
-			...this.upDownButtons,
-			...this.leftRightButtons,
-		].forEach(button => this.raiseEvent(button.getTopicPath(), button));
-	};
 
 	static deviceCount = 0;
 	static async detect(): Promise<Lcxl | null> {
@@ -219,7 +201,7 @@ export class Lcxl extends BaseDevice {
 		if (midi.input === null || midi.output === null) {
 			return null;
 		}
-		const result = new Lcxl(midi, Lcxl.deviceCount.toString());
+		const result = new Lcxl(midi);
 		await result.init();
 		return result;
 	}

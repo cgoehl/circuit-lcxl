@@ -13,17 +13,19 @@ class MqttController {
 	}
 
 	handleMessage = async (topic: string, payload: any) => {
+		console.log(topic, payload);
 		if (/web\/ui\/layout\/knobs/.test(topic)) {
 			store.ui.layout.knobs.set(payload);
 		} else if (/web\/ui\/layout\/mod-matrix/.test(topic)) {
 			store.ui.layout.matrix.set(payload);
 		} else if (/web\/ui\/state/.test(topic)) {
 			store.ui.state.set(payload);
-		} else if (/phy\/novation\/circuit\/\d+\/event\/patch/.test(topic)) {
+		} else if (topic === 'web/circuit/patch') {
+			console.log(topic, payload);
 			const { patch, synthNumber } = payload;
 			synthNumber === 0
-				? store.circuit.patch0.set(patch)
-				: store.circuit.patch1.set(patch)
+				? store.circuit.merge({ patch0: patch })
+				: store.circuit.merge({ patch1: patch })
 		}
 		// console.log(JSON.stringify(store.get(), null, 2));
 	}
@@ -32,7 +34,6 @@ class MqttController {
 		this.client.on('connect', () => {
 			this.publish('hello', { });
 			store.merge({ isMqttConnected: true });
-			this.client.subscribe(`phy/#`);
 			this.client.subscribe(`web/#`);
 		});
 		this.client.on('error', e => console.error(e));

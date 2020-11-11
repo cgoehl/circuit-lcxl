@@ -7,7 +7,9 @@ import { CircuitPatch } from './Patch';
 import { Property } from '../../shared/Property';
 
 
-export class NovationCircuit extends BaseDevice {
+export class NovationCircuit extends BaseDevice<{
+	patchChanged: (synthNumber: 0 | 1, patch: CircuitPatch) => void,
+}> {
 
 	public flatParameters: MidiParameter[];
 	public parametersByName: {[name: string]: MidiParameter} = null;
@@ -16,17 +18,6 @@ export class NovationCircuit extends BaseDevice {
 
 	patch0 = new Property<CircuitPatch>(null);
 	patch1 = new Property<CircuitPatch>(null);
-
-	constructor(
-		midi: IMidiIO,
-		instance: string,
-		) {
-		super({
-			vendor: 'novation',
-			model: 'circuit',
-			instance,
-		}, midi);
-	}
 
 	init = async () => {
 		this.flatParameters = await readMidiMapping(`src/be/NovationCircuit/midiMapping.csv`);
@@ -83,10 +74,12 @@ export class NovationCircuit extends BaseDevice {
 		this.midi.output.send('cc', { channel: synthNumber, controller: 98, value: lsb });
 		this.midi.output.send('cc', { channel: synthNumber, controller: 6, value });
 	}
+	
 	private raisePatchChange = (synthNumber: 0 | 1) => {
-		synthNumber === 0
-			?	this.raiseEvent(['patch'], { patch: this.patch0.get(), synthNumber })
-			:	this.raiseEvent(['patch'], { patch: this.patch1.get(), synthNumber });
+		const patch = synthNumber === 0
+			?	this.patch0.get()
+			:	this.patch1.get();
+		this.emit('patchChanged', synthNumber, patch);
 	}
 	
 	private __currentDumpRequestSynth: 0 | 1 = 0;
@@ -127,7 +120,7 @@ export class NovationCircuit extends BaseDevice {
 		if (midi.input === null || midi.output === null) {
 			return null;
 		}
-		const result = new NovationCircuit(midi, NovationCircuit.deviceCount.toString());
+		const result = new NovationCircuit(midi);
 		await result.init();
 		return result;
 	}

@@ -24,16 +24,9 @@ async function mplx() {
 	const lcxl = await Lcxl.detect();
 	lcxl.clearLeds();
 	const circuit = await NovationCircuit.detect();
-	const c = new CircuitVirtualController(
-		circuit,
-		broker
-	);
-	await c.start();
-	const l = new PhysicalVirtualAdapter(
-		lcxl,
-		c,
-		broker
-	);
+	const controller = new CircuitVirtualController(circuit, broker);
+	await controller.start();
+	const l = new PhysicalVirtualAdapter(lcxl, controller);
 	await l.start();
 	// await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload) => {
 	// 	const { location : { index, row, col }, value } = payload as Knob;
@@ -67,23 +60,23 @@ async function mplx() {
 	// console.log(lcxl);
 }
 
-async function lxclLedRange() {
-	console.log('inputs', getInputs());
-	console.log('outputs', getOutputs());
+// async function lxclLedRange() {
+// 	console.log('inputs', getInputs());
+// 	console.log('outputs', getOutputs());
 
-	const broker = await startBroker();
-	await broker.sub('phy/#', (payload, topic) => {
-		console.debug(topic, payload);
-	});
+// 	const broker = await startBroker();
+// 	await broker.sub('phy/#', (payload, topic) => {
+// 		console.debug(topic, payload);
+// 	});
 	
-	const lcxl = await Lcxl.detect();
-	lcxl.clearLeds();
-	await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload) => {
-		const { location : { index }, value } = payload as Knob;
-		broker.pub(`${lcxl.topicPrefix}/command/led/grid/byIdx/${index}`, { color: value });
-	});
-	console.log(lcxl);
-}
+// 	const lcxl = await Lcxl.detect();
+// 	lcxl.clearLeds();
+// 	await broker.sub(`${lcxl.topicPrefix}/event/knob/grid/#`, (payload) => {
+// 		const { location : { index }, value } = payload as Knob;
+// 		broker.pub(`${lcxl.topicPrefix}/command/led/grid/byIdx/${index}`, { color: value });
+// 	});
+// 	console.log(lcxl);
+// }
 
 async function funnyLightsGame() {
 	console.log('inputs', getInputs());

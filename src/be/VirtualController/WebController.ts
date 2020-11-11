@@ -34,10 +34,7 @@ export class CircuitVirtualController extends EventEmitter<{
 			this.updateState(s => s);
 			circuit.announceState();
 		});
-
-		const patchHandler = synthNumber => patch => broker.pub(`web/circuit/patch`, { patch, synthNumber });
-		circuit.patch0.on('changed', patchHandler(0));
-		circuit.patch1.on('changed', patchHandler(1));
+		circuit.on('patchChanged', (synthNumber, patch) => broker.pub(`web/circuit/patch`, { patch, synthNumber }));
 	}
 
 	buildModMatrixUi = (): UiModMatrix => {

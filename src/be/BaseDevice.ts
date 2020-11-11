@@ -1,26 +1,12 @@
 import { ICloseable } from "./ICloseable";
-import { broker } from './Broker';
 import { getInputs, getOutputs, Input, Output } from "easymidi";
-
-
-export interface IDeviceDescriptor {
-	vendor: string,
-	model: string,
-	instance: string,
-}
+import { DefaultEventMap, EventEmitter } from "tsee";
 
 export interface IMidiIO {
 	input: Input,
 	output: Output,
 }
 
-export interface ICommand {
-
-}
-
-export interface IEvent {
-
-}
 
 export function detectMidi(isDevice: (name: string) => boolean) {
 	const inputName = getInputs().find(isDevice);
@@ -31,31 +17,15 @@ export function detectMidi(isDevice: (name: string) => boolean) {
 	}
 }
 
-export abstract class BaseDevice implements ICloseable {
-
-	public topicPrefix = '';
+export abstract class BaseDevice<EventMap extends DefaultEventMap> 
+extends EventEmitter<EventMap> implements ICloseable {
 
 	constructor(
-		public readonly descriptor: IDeviceDescriptor,
 		public readonly midi: IMidiIO
 	) {
-		const { vendor, model, instance } = descriptor;
-		this.topicPrefix = `phy/${vendor}/${model}/${instance}`;
+		super();
 	}
 
-	protected async registerCommand(topic: string, callback: (payload: ICommand, topic: string[]) => void) {
-		const t = `${this.topicPrefix}/command/${topic}`;
-		const c = (payload, tc) => callback(payload as ICommand, tc.replace(`${this.topicPrefix}/command/`, '').split('/'));
-		await broker.sub(t, c);
-		this.onClose(async () => await broker.unsub(t, c));
-	}
-
-	protected raiseEvent(path: string[], payload: IEvent) {
-		broker.pub(
-			`${this.topicPrefix}/event/${path.join('/')}`,
-			payload
-		);
-	}
 
 	protected onClose(callback: () => void) {
 		this.onCloseCallbacks.push(callback);
