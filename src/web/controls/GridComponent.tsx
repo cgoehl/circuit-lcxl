@@ -1,6 +1,6 @@
 import { State } from '@hookstate/core';
 import React from 'react';
-import { UiGrid } from '../../shared/UiParameter';
+import { UiGrid } from '../../shared/UiDtos';
 import { IPoint2 } from '../../shared/utils';
 import { ICircuitPatchState } from '../state/store';
 import { ControllerComponent } from './ControllerComponent';

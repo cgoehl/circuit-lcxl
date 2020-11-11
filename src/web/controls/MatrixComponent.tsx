@@ -1,6 +1,6 @@
 import { State } from '@hookstate/core';
 import React from 'react';
-import { UiModMatrix } from '../../shared/UiParameter';
+import { UiModMatrix } from '../../shared/UiDtos';
 import { ICircuitPatchState } from '../state/store';
 import { EnumParameterComponent } from './EnumParameterComponent';
 import { ParameterComponent } from './ParameterComponent';

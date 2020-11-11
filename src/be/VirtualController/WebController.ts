@@ -1,4 +1,4 @@
-import { UiModMatrix, UiModMatrixSlot, UiParameter } from "../../shared/UiParameter";
+import { UiModMatrix, UiModMatrixSlot, UiParameter } from "../../shared/UiDtos";
 import { IPoint2, range } from "../../shared/utils";
 import { IBroker } from "../Broker";
 import { NovationCircuit } from "../NovationCircuit/NovationCircuit";

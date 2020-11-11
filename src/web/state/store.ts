@@ -1,6 +1,6 @@
 import { createState, DevTools, State } from '@hookstate/core';
 import { MidiParameter } from '../../shared/MidiParameter';
-import { UiGrid, UiModMatrix } from '../../shared/UiParameter';
+import { UiGrid, UiModMatrix } from '../../shared/UiDtos';
 import { IPoint2 } from '../../shared/utils';
 
 export interface ILcxlState {

@@ -1,5 +1,5 @@
 import { MidiParameter } from "../../shared/MidiParameter";
-import { UiGrid, UiParameter } from "../../shared/UiParameter";
+import { UiGrid, UiParameter } from "../../shared/UiDtos";
 import { IPoint2 } from "../../shared/utils";
 
 export class UiLayout {
