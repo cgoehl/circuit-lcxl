@@ -1,11 +1,12 @@
-import { State } from '@hookstate/core';
 import React from 'react';
-import { UiModMatrix } from '../../shared/UiDtos';
-import { ICircuitPatchState } from '../state/store';
+import { IAppState } from '../state/store';
 import { EnumParameterComponent } from './EnumParameterComponent';
 import { ParameterComponent } from './ParameterComponent';
+import { connect } from 'react-redux';
+import { range } from '../../shared/utils';
 
 import './MatrixComponent.scss';
+
 
 export function MatrixSlotComponent(props: {
 	slotNumber: number,
@@ -36,33 +37,40 @@ export function MatrixSlotComponent(props: {
 	);
 }
 
+const MatrixSlotContainer = connect((state: IAppState, props: {slotIndex: number}) => {
+	const { ui: { layout: { matrix: { slots, destinations, sources }}}, circuit: { patch0: { bytes }} } = state;
+	const { slotIndex } = props;
+	const {
+		slotNumber,
+		source1Address,
+		source2Address,
+		depthAddress,
+		destinationAddress,
+	} = slots[slotIndex];
+	const getValue = (address: number) => bytes[address];
+	return {
+		slotNumber,
+		sources,
+		destinations,
+		source1: getValue(source1Address),
+		source2: getValue(source2Address),
+		depth: getValue(depthAddress),
+		destination: getValue(destinationAddress),
+	};
+})(MatrixSlotComponent);
+
 export function MatrixComponent(props: {
-	patchState: State<ICircuitPatchState>,
-	layout: UiModMatrix,
+	slotCount: number,
 }) {
-	const { layout: { slots, sources, destinations }, patchState } = props;
-	const getValue = (address: number) => patchState.bytes[address || -1].get();
 	return (
 		<div className='mod-matrix'>
-			{slots.map((slot, i) => {
-				const {
-					slotNumber,
-					source1Address,
-					source2Address,
-					depthAddress,
-					destinationAddress,
-				} = slot;
-				return <MatrixSlotComponent 
-					key={i}
-					slotNumber={slotNumber}
-					sources={sources}
-					destinations={destinations}
-					source1={getValue(source1Address)}
-					source2={getValue(source2Address)}
-					depth={getValue(depthAddress)}
-					destination={getValue(destinationAddress)}
-				/>
-			})}
+			{ range(props.slotCount).map(index => <MatrixSlotContainer slotIndex={index} key={index} />)}
 		</div>
 	);
 }
+
+
+export const MatrixContainer = connect((state: IAppState) => {
+	const { ui: { layout: { matrix: { slots }}}} = state;
+	return { slotCount: slots.length };
+})(MatrixComponent);

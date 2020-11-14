@@ -10,6 +10,10 @@ export interface UiState {
 	controllerAnchor: IPoint2,
 	controllerPage: number,
 	synthNumber: 0 | 1,
+	modMatrix: {
+		slot: number,
+		isOpen: false,
+	},
 }
 
 export interface UiParameter {

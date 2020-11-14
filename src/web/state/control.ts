@@ -1,6 +1,7 @@
 
 import { connect as mqttConnect, MqttClient as Mqtt} from 'mqtt';
-import { store } from './store';
+import { patchUpdate, store, updateAction } from './store';
+
 
 class MqttController {
 	
@@ -12,28 +13,31 @@ class MqttController {
 		this.topicPrefix = `web`;
 	}
 
+
 	handleMessage = async (topic: string, payload: any) => {
+		const { dispatch } = store;
 		console.log(topic, payload);
-		if (/web\/ui\/layout\/knobs/.test(topic)) {
-			store.ui.layout.knobs.set(payload);
-		} else if (/web\/ui\/layout\/mod-matrix/.test(topic)) {
-			store.ui.layout.matrix.set(payload);
-		} else if (/web\/ui\/state/.test(topic)) {
-			store.ui.state.set(payload);
-		} else if (topic === 'web/circuit/patch') {
-			console.log(topic, payload);
-			const { patch, synthNumber } = payload;
-			synthNumber === 0
-				? store.circuit.merge({ patch0: patch })
-				: store.circuit.merge({ patch1: patch })
+		switch (topic) {
+			case 'web/ui/layout/knobs':
+				dispatch(updateAction(state => (state.ui.layout.knobs = payload)));
+				break;
+			case 'web/ui/layout/mod-matrix':
+				dispatch(updateAction(state => (state.ui.layout.matrix = payload)));
+				break;
+			case 'web/ui/state':
+				dispatch(updateAction(state => (state.ui.state = payload)));
+				break;
+			case 'web/circuit/patch':
+				const { patch, synthNumber } = payload;
+				dispatch(patchUpdate(patch, synthNumber));
+				break;
 		}
-		// console.log(JSON.stringify(store.get(), null, 2));
 	}
 
 	start = async () => {
 		this.client.on('connect', () => {
 			this.publish('hello', { });
-			store.merge({ isMqttConnected: true });
+			store.dispatch(updateAction(state => (state.isConnected = true)));
 			this.client.subscribe(`web/#`);
 		});
 		this.client.on('error', e => console.error(e));

@@ -121,7 +121,7 @@ export async function playNotes(output: Output, channel: Channel, notes: number[
 	const interval = 150;
 	for (let i = 0; i <= (notes.length) * 2; i++) {
 		const note: Note = { channel, note: notes[Math.floor(i/2)], velocity: 64 };
-		if (i % 2 == 0) {
+		if (i % 2 === 0) {
 			output.send('noteon', note);
 		} else {
 			output.send('noteoff', note);

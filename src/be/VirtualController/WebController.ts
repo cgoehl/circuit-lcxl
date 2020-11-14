@@ -12,9 +12,12 @@ export class CircuitVirtualController extends EventEmitter<{
 	private state : UiState = {
 		controllerPage: 0,
 		controllerAnchor: { x: 0, y: 0 },
-		synthNumber: 0
+		synthNumber: 0,
+		modMatrix: {
+			slot: 1,
+			isOpen: false,
+		},
 	};
-	// private controllerAnchor: IPoint2 = { x: 0, y: 0 };
 
 	constructor(
 		readonly circuit: NovationCircuit,
@@ -58,7 +61,6 @@ export class CircuitVirtualController extends EventEmitter<{
 		const { x, y } = this.state.controllerAnchor;
 		if (value == null) { return; }
 		const absVKnob = { x: col + x, y: row + y };
-		console.log(absVKnob);
 		const uiParam = this.layout.getAt(absVKnob);
 		if (!uiParam) { return; }
 		const midiParam = this.circuit.parametersByAddress[uiParam.address];

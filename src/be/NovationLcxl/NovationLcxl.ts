@@ -143,7 +143,6 @@ export class Lcxl extends BaseDevice<{
 
 		const { input } = this.midi;
 		input.on('cc', evt => {
-			console.log(evt);
 			const { channel, controller, value } = evt;
 			const knob = knobCCLookup[controller];
 			if (knob) {
