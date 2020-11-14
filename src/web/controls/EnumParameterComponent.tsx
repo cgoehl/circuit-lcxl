@@ -23,11 +23,11 @@ export function EnumParameterComponent(props: {
 	return (
 		<div className='enum-parameter' style={{ backgroundColor: color }}>
 			<div className='_enum-values'>
-				{renderRow(value - 2)}
-				{renderRow(value - 1)}
-				{renderRow(value + 0)}
-				{renderRow(value + 1)}
 				{renderRow(value + 2)}
+				{renderRow(value + 1)}
+				{renderRow(value + 0)}
+				{renderRow(value - 1)}
+				{renderRow(value - 2)}
 			</div>
 
 			<div className='_label'>{label}</div>

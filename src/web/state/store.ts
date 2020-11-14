@@ -58,7 +58,7 @@ function reducer(state: IAppState = initial as any, action: Action<string>): IAp
 			const newState = clone(state);
 			(action as any).payload.update(newState);
 			const { isConnected, ui, circuit } = newState;
-			newState.isReady = (isConnected && ui.layout.knobs && ui.layout.matrix && ui.state && circuit.patch0.bytes.length > 0) || false;
+			newState.isReady = (isConnected && ui.layout.knobs && ui.layout.matrix && ui.state && true) || false;
 			return newState;
 		}
 		case 'PATCH_UPDATE': {
