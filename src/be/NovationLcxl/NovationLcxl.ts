@@ -101,6 +101,9 @@ export class Lcxl extends BaseDevice<{
 	setGridLed = (index: number, color: number | string): void => 
 		this.setNoteLed(Lcxl.gridLedNotes[index])(color);
 
+	setSideLed = (index: number, color: number | string): void => 
+		this.setNoteLed(Lcxl.sideButtonLedNotes[index])(color);
+
 	clearLeds = () => {
 		range(Lcxl.gridLedNotes.length).forEach(i => this.setGridLed(i, 'off'));
 	}

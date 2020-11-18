@@ -14,7 +14,7 @@ export class CircuitVirtualController extends EventEmitter<{
 		controllerAnchor: { x: 0, y: 0 },
 		synthNumber: 0,
 		modMatrix: {
-			slot: 1,
+			slot: 0,
 			isOpen: false,
 		},
 	};
@@ -24,22 +24,60 @@ export class CircuitVirtualController extends EventEmitter<{
 		readonly broker: IBroker,
 	) {
 		super();
-		this.layout = this.buildKnobUi();
+		this.knobUi = this.buildKnobUi();
+		this.modMatrixUi = this.buildModMatrixUi();
 	}
 
-	readonly layout: UiLayout;
+	readonly knobUi: UiLayout;
+	readonly modMatrixUi: UiModMatrix;
 
 	start = async () => {
 		const { broker, circuit } = this;
 		await broker.sub(`web/hello`, async (payload: any) => {
-			broker.pub(`web/ui/layout/knobs`, this.layout.buildGrid());
-			broker.pub(`web/ui/layout/mod-matrix`, this.buildModMatrixUi());
+			broker.pub(`web/ui/layout/knobs`, this.knobUi.buildGrid());
+			broker.pub(`web/ui/layout/mod-matrix`, this.modMatrixUi);
 			this.updateState(s => s);
 			circuit.announceState();
 		});
 		circuit.on('patchChanged', (synthNumber, patch) => broker.pub(`web/circuit/patch`, { patch, synthNumber }));
 	}
 
+
+	handleControlChange = (col: number, row: number, value: number) => {
+		const { controllerAnchor: { x, y }, modMatrix: { isOpen, slot }} = this.state;
+		if (isOpen) {
+			if (row !== 0) { return; }
+			if (col === 0) {
+				this.updateState(s => ({ ...this.state, modMatrix: { isOpen, slot: Math.floor(value / 127 * (this.modMatrixUi.slots.length - 1)) }}));
+			}
+			if (col > 3) {
+				const s = this.modMatrixUi.slots[slot];
+				if(!s) {
+					console.warn('out of range', slot);
+					return;
+				}
+				const { source1Address, source2Address, depthAddress, destinationAddress } = s;
+				const address = [ source1Address, source2Address, depthAddress, destinationAddress ][col - 4];
+				this.circuit.setMidiParam(this.state.synthNumber, this.circuit.parametersByAddress[address], value);
+			}
+		} else {
+			if (value == null) { return; }
+			const absVKnob = { x: col + x, y: row + y };
+			const uiParam = this.knobUi.getAt(absVKnob);
+			if (!uiParam) { return; }
+			const midiParam = this.circuit.parametersByAddress[uiParam.address];
+			if (!midiParam) { return; }
+			this.circuit.setMidiParam(this.state.synthNumber, midiParam, value);
+		}
+
+	}
+
+	updateState = (func: (UiState) => UiState) => {
+		this.state = func(this.state);
+		this.emit('changed', this.state);
+		this.broker.pub(`web/ui/state`, this.state);
+	}
+	
 	buildModMatrixUi = (): UiModMatrix => {
 		const baseAddress = 124;
 		const slots: UiModMatrixSlot[] = range(20)
@@ -55,23 +93,6 @@ export class CircuitVirtualController extends EventEmitter<{
 			destinations: this.circuit.parametersByName['mod matrix 1 destination'].valueNames,
 			slots,
 		}
-	}
-
-	handleControlChange = (col: number, row: number, value: number) => {
-		const { x, y } = this.state.controllerAnchor;
-		if (value == null) { return; }
-		const absVKnob = { x: col + x, y: row + y };
-		const uiParam = this.layout.getAt(absVKnob);
-		if (!uiParam) { return; }
-		const midiParam = this.circuit.parametersByAddress[uiParam.address];
-		if (!midiParam) { return; }
-		this.circuit.setMidiParam(this.state.synthNumber, midiParam, value);
-	}
-
-	updateState = (func: (UiState) => UiState) => {
-		this.state = func(this.state);
-		this.emit('changed', this.state);
-		this.broker.pub(`web/ui/state`, this.state);
 	}
 
 	buildKnobUi = (): UiLayout => {

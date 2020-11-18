@@ -74,8 +74,8 @@ function convertRow(row: any): MidiParameter {
 	return {
 		section,
 		name: parameter_name,
-		minValue: min,
-		maxValue: max,
+		minValue: +min,
+		maxValue: +max,
 		sysexAddress,
 		protocol,
 		orientation: orientation === 'Centered' ? 'centered' : 'zeroBased',

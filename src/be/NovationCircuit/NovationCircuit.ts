@@ -38,19 +38,21 @@ export class NovationCircuit extends BaseDevice<{
 	}
 	
 	setMidiParam = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
-		const { protocol: { type }} = midiParam;
+		const { protocol: { type }, minValue, maxValue} = midiParam;
+		const clampedValue = Math.floor((value/127) * (maxValue - minValue)) + minValue;
+		console.log(clampedValue);
 		switch(type) {
 			case 'cc': {
-				this.setCcParam(synthNumber, midiParam.protocol as MidiCc, value);
+				this.setCcParam(synthNumber, midiParam.protocol as MidiCc, clampedValue);
 				break;
 			}
 			case 'nrpn': {
-				this.setNrpnParam(synthNumber, midiParam.protocol as MidiNrpn, value);
+				this.setNrpnParam(synthNumber, midiParam.protocol as MidiNrpn, clampedValue);
 				break;
 			}
 			default: throw new Error(`Type not implemented: ${type}`);
 		}
-		this.updatePatch(synthNumber, midiParam, value);
+		this.updatePatch(synthNumber, midiParam, clampedValue);
 	}
 
 	private updatePatch = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {

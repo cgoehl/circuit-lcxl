@@ -1,3 +1,4 @@
+import { stat } from "fs";
 import { MidiParameter } from "../../shared/MidiParameter";
 import { UiState } from "../../shared/UiDtos";
 import { IPoint2, range } from "../../shared/utils";
@@ -25,6 +26,16 @@ export class PhysicalVirtualAdapter {
 				controllerAnchor: this.pageToAnchor(index),
 			}));
 		})
+		lcxl.on('sideButton', button => {
+			const { location: { index }, isPressed } = button;
+			if (!isPressed || index !== 3) { return; }
+			virtual.updateState(state => {
+				const { modMatrix: { isOpen, slot}} = state;
+				return {
+					...state,
+					modMatrix: { isOpen: !isOpen, slot },
+			}});
+		});
 		lcxl.on('knob', knob => {
 			const { location: { col, row }, value } = knob;
 			virtual.handleControlChange(col, row, value);
@@ -33,9 +44,13 @@ export class PhysicalVirtualAdapter {
 	};
 	
 	handleUiStateChange = (state: UiState) => {
-		const { controllerPage } = state;
+		const { controllerPage, modMatrix: { isOpen } } = state;
 		range(4).forEach(i => {
 			this.lcxl.setDirectionLed(i, i === controllerPage ? 'redH' : 'off');
+		});
+		range(4).forEach(i => {
+			this.lcxl.setSideLed(i, (i === 3) && isOpen ? 'amberH' : 'off');
+			// this.lcxl.setSideLed(i, 'redH');
 		});
 	}
 

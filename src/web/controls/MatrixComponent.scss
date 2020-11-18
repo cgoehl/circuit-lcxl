@@ -5,13 +5,26 @@
 	._slot {
 		display: flex;
 		flex-direction: row;
-		justify-content: space-evenly;
+		justify-content: space-between;
 		width: 24%;
-		padding: 1px;;
+		padding: 1px;
+		._number {
+			width: 30px;
+			min-width: 30px;
+			font-weight: bold;
+			padding-right: 0.1em;
+			align-items: center;
+			justify-items: flex-end;
+			display: flex;
+			& > * {
+				width: 100%;
+				text-align: end;
+			}
+		}
 		& > * {
-			width: 23%;
-			min-width: 23%;
-			flex: 0 0 6.25%;
+			width: 24%;
+			min-width: 24%;
+			flex: 0 0 1px;
 		}
 	}
 }
