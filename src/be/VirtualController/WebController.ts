@@ -194,21 +194,21 @@ export class CircuitVirtualController extends EventEmitter<{
 		};
 		addEqItems();
 
-
+		//LFO1_OneShot	(bit	0),	LFO1_KeySync	(bit	1),	LFO1_CommonSync	(bit	2),	LFO1_DelayTrigger	(bit	3),	LFO1_FadeMode	(bits	4-5)
 		const addLfoItems= (coords: IPoint2, lfoNum: 1 | 2) => {
 			const lfoItems = [
-				`lfo ${lfoNum} waveform`,
-				`lfo ${lfoNum} phase offset`,
-				`lfo ${lfoNum} slew rate`,
-				`lfo ${lfoNum} delay`,
-				`lfo ${lfoNum} delay sync`,
-				`lfo ${lfoNum} rate`,
-				`lfo ${lfoNum} rate sync`,
 				`lfo ${lfoNum} one shot`,
 				`lfo ${lfoNum} key sync`,
 				`lfo ${lfoNum} common sync`,
 				`lfo ${lfoNum} delay trigger`,
 				`lfo ${lfoNum} fade mode`,
+				`lfo ${lfoNum} slew rate`,
+				`lfo ${lfoNum} phase offset`,
+				`lfo ${lfoNum} rate sync`,
+				`lfo ${lfoNum} delay sync`,
+				`lfo ${lfoNum} waveform`,
+				`lfo ${lfoNum} rate`,
+				`lfo ${lfoNum} delay`,
 			];
 			layout.addRect(coords, 3, lfoItems);
 		}
