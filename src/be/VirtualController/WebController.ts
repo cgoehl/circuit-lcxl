@@ -65,7 +65,7 @@ export class CircuitVirtualController extends EventEmitter<{
 			const absVKnob = { x: col + x, y: row + y };
 			const uiParam = this.knobUi.getAt(absVKnob);
 			if (!uiParam) { return; }
-			const midiParam = this.circuit.parametersByAddress[uiParam.address];
+			const midiParam = this.circuit.parametersByName[uiParam.name];
 			if (!midiParam) { return; }
 			this.circuit.setMidiParam(this.state.synthNumber, midiParam, value);
 		}

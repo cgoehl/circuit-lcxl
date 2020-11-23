@@ -14,6 +14,20 @@ export const range = (count: number) => Array.from(new Array(count)).map((_ , i)
 
 export const asciiToString = (charCodes: number[]) => String.fromCharCode.apply(null, charCodes);
 
+export const getNumberAtBitRange = (number: number, lsb: number, msb: number) => {
+	const maxInt16 = 0xffFF;
+	const clearMask = maxInt16 >> (15 - msb);
+	return (number & clearMask) >> lsb;
+}
+
+export const setNumberAtBitRange = (fullNumber: number, infix: number, lsb: number, msb: number) => {
+	const maxInt16 = 0xffFF;
+	const prefixMask = maxInt16 << (msb + 1);
+	const postfixMask = maxInt16 >> (16 - lsb);
+	const mask = prefixMask | postfixMask;
+	return (fullNumber & mask) | (infix << lsb);
+}
+
 export const arrayToObject = <T>(items: T[], selector: (item: T) => string): {[key: string]: T}=> {
 	const r: {[key: string]: T} = {};
 	items.forEach((item) => {

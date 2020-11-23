@@ -17,12 +17,15 @@ export interface UiState {
 }
 
 export interface UiParameter {
+	name: string,
 	type: 'parameter',
 	label: string,
 	color: string,
 	minValue: number,
 	maxValue: number,
 	address: number,
+	readLsb: number,
+	readMsb: number,
 	orientation: UiOrientation,
 	valueNames: null | { [key: string]: string },
 }

@@ -9,6 +9,9 @@ export interface MidiParameter {
 	protocol: MidiParameterProtocol;
 	orientation: 'centered' | 'zeroBased',
 	valueNames: null | { [key: string]: string },
+	readLsb: number,
+	readMsb: number,
+	offset: number,
 }
 
 export type MidiParameterProtocol = MidiCc | MidiNrpn;

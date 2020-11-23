@@ -7,6 +7,7 @@ import { range } from '../../shared/utils';
 
 import './MatrixComponent.scss';
 
+const readBits = { readLsb: 0, readMsb: 31 };
 const inActiveColor = '#eee';
 export function MatrixSlotComponent(props: {
 	slotNumber: number,
@@ -31,10 +32,10 @@ export function MatrixSlotComponent(props: {
 	return (
 		<div className='_slot'>
 			<div className='_number' style={{ backgroundColor: isActive ? '#def' : inActiveColor }}><div>{slotNumber}</div></div>
-			<EnumParameterComponent value={source1} param={{ label: 'Source 1', color: isActive ? '#def' : inActiveColor, valueNames: sources }} />
-			<EnumParameterComponent value={source2} param={{ label: 'Source 2', color: isActive ? '#def' : inActiveColor, valueNames: sources }} />
+			<EnumParameterComponent value={source1} param={{ label: 'Source 1', color: isActive ? '#def' : inActiveColor, valueNames: sources, ...readBits }} />
+			<EnumParameterComponent value={source2} param={{ label: 'Source 2', color: isActive ? '#def' : inActiveColor, valueNames: sources, ...readBits }} />
 			<ParameterComponent value={depth} param={{ label: 'Depth', minValue: 0, maxValue: 127, orientation: 'centered', color: isActive ? '#fde' : inActiveColor }} />
-			<EnumParameterComponent value={destination} param={{ label: 'Destination', color: isActive ? '#fed' : inActiveColor, valueNames: destinations }} />
+			<EnumParameterComponent value={destination} param={{ label: 'Destination', color: isActive ? '#fed' : inActiveColor, valueNames: destinations, ...readBits }} />
 		</div>
 	);
 }

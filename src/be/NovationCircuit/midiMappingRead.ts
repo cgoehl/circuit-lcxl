@@ -58,6 +58,9 @@ function convertRow(row: any): MidiParameter {
 		label,
 		color,
 		notes,
+		readLsb, 
+		readMsb,
+		offset
 	} = row;
 	const protocol: MidiParameterProtocol = cc_msb 
 	? {
@@ -82,5 +85,8 @@ function convertRow(row: any): MidiParameter {
 		label,
 		color,
 		valueNames: convertNotes(notes),
+		readLsb: +readLsb, 
+		readMsb: +readMsb,
+		offset: +offset,
 	};
 }

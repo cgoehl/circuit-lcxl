@@ -1,6 +1,6 @@
 import { BaseDevice, detectMidi, IMidiIO } from '../BaseDevice';
 import { MidiCc, MidiNrpn, MidiParameter } from '../../shared/MidiParameter';
-import { arrayToObject, compareBy, delay } from '../../shared/utils';
+import { arrayToObject, compareBy, delay, setNumberAtBitRange } from '../../shared/utils';
 import { circuitSysex } from './ciruitSysex';
 import { readControls as readMidiMapping } from './midiMappingRead';
 import { CircuitPatch } from './Patch';
@@ -38,16 +38,15 @@ export class NovationCircuit extends BaseDevice<{
 	}
 	
 	setMidiParam = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
-		const { protocol: { type }, minValue, maxValue} = midiParam;
-		const clampedValue = Math.floor((value/127) * (maxValue - minValue)) + minValue;
-		console.log(clampedValue);
+		const { protocol: { type }, minValue, maxValue, offset} = midiParam;
+		const clampedValue = Math.floor((value/128) * (maxValue - minValue + 1)) + minValue;
 		switch(type) {
 			case 'cc': {
-				this.setCcParam(synthNumber, midiParam.protocol as MidiCc, clampedValue);
+				this.setCcParam(synthNumber, midiParam.protocol as MidiCc, clampedValue + offset);
 				break;
 			}
 			case 'nrpn': {
-				this.setNrpnParam(synthNumber, midiParam.protocol as MidiNrpn, clampedValue);
+				this.setNrpnParam(synthNumber, midiParam.protocol as MidiNrpn, clampedValue + offset);
 				break;
 			}
 			default: throw new Error(`Type not implemented: ${type}`);
@@ -56,10 +55,13 @@ export class NovationCircuit extends BaseDevice<{
 	}
 
 	private updatePatch = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
+		const { sysexAddress, readLsb, readMsb } = midiParam;
 		const target = synthNumber === 0
 			? this.patch0
 			: this.patch1;
-		target.get().bytes[midiParam.sysexAddress] = value;
+		var currentValue = target.get().bytes[sysexAddress];
+		target.get().bytes[sysexAddress] = setNumberAtBitRange(currentValue, value, readLsb, readMsb);
+		console.log(target.get().bytes[sysexAddress].toString(2), value, currentValue );
 		//todo this is a hack, maybe we should just remove the Property-class entirely
 		target.set(target.get());
 		this.raisePatchChange(synthNumber);
