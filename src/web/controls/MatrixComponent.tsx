@@ -7,7 +7,7 @@ import { range } from '../../shared/utils';
 
 import './MatrixComponent.scss';
 
-const readBits = { readLsb: 0, readMsb: 31 };
+const readBits = { readLsb: 0, readMsb: 7 };
 const inActiveColor = '#eee';
 export function MatrixSlotComponent(props: {
 	slotNumber: number,
