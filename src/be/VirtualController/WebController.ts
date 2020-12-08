@@ -15,7 +15,7 @@ export class CircuitVirtualController extends EventEmitter<{
 		synthNumber: 0,
 		modMatrix: {
 			slot: 0,
-			isOpen: false,
+			mode: 'closed'
 		},
 	};
 
@@ -44,11 +44,11 @@ export class CircuitVirtualController extends EventEmitter<{
 
 
 	handleControlChange = (col: number, row: number, value: number) => {
-		const { controllerAnchor: { x, y }, modMatrix: { isOpen, slot }} = this.state;
-		if (isOpen) {
+		const { controllerAnchor: { x, y }, modMatrix: { mode, slot }} = this.state;
+		if (mode === 'open') {
 			if (row !== 0) { return; }
 			if (col === 0) {
-				this.updateState(s => ({ ...this.state, modMatrix: { isOpen, slot: Math.floor(value / 127 * (this.modMatrixUi.slots.length - 1)) }}));
+				this.updateState(s => ({ ...this.state, modMatrix: { mode, slot: Math.floor(value / 127 * (this.modMatrixUi.slots.length - 1)) }}));
 			}
 			if (col > 3) {
 				const s = this.modMatrixUi.slots[slot];
@@ -72,7 +72,7 @@ export class CircuitVirtualController extends EventEmitter<{
 
 	}
 
-	updateState = (func: (UiState) => UiState) => {
+	updateState = (func: (state: UiState) => UiState) => {
 		this.state = func(this.state);
 		this.emit('changed', this.state);
 		this.broker.pub(`web/ui/state`, this.state);

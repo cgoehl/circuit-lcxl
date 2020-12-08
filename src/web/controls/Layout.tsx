@@ -14,6 +14,6 @@ function LayoutComponent(props: {
 }
 
 export const LayoutContainer = connect((state: IAppState) => {
-	const { ui: { state: { modMatrix: { isOpen }}}} = state;
-	return { isOpen }
+	const { ui: { state: { modMatrix: { mode }}}} = state;
+	return { isOpen: mode === 'open' }
 })(LayoutComponent);

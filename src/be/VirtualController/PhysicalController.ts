@@ -1,6 +1,6 @@
 import { stat } from "fs";
 import { MidiParameter } from "../../shared/MidiParameter";
-import { UiState } from "../../shared/UiDtos";
+import { UiModMatrixMode, UiState } from "../../shared/UiDtos";
 import { IPoint2, range } from "../../shared/utils";
 import { Lcxl } from "../NovationLcxl";
 import { Button, Knob } from "../PhysicalControl";
@@ -28,13 +28,9 @@ export class PhysicalVirtualAdapter {
 		})
 		lcxl.on('sideButton', button => {
 			const { location: { index }, isPressed } = button;
-			if (!isPressed || index !== 3) { return; }
-			virtual.updateState(state => {
-				const { modMatrix: { isOpen, slot}} = state;
-				return {
-					...state,
-					modMatrix: { isOpen: !isOpen, slot },
-			}});
+			if (index === 3) { 
+				this.handleModMatrixButton(isPressed);
+			}
 		});
 		lcxl.on('knob', knob => {
 			const { location: { col, row }, value } = knob;
@@ -42,15 +38,33 @@ export class PhysicalVirtualAdapter {
 		})
 		virtual.on('changed', this.handleUiStateChange);
 	};
+
+	handleModMatrixButton = (isPressed: boolean) => {
+		this.virtual.updateState((state: UiState) => {
+			const { modMatrix: { mode, slot }} = state;
+			let newMode: UiModMatrixMode = 
+				(mode === 'closed' && isPressed) ? 'awaitingCombo' :
+				(mode === 'awaitingCombo' && !isPressed) ? 'open' :
+				(mode === 'open') ? 'closed' : mode;
+			return {
+				...state,
+				modMatrix: { mode: newMode, slot },
+		}});
+	}
+
+	readonly modMatrixModeColors = {
+		open: 'amberH',
+		awaitingCombo: 'greenH',
+		closed: 'off',
+	};
 	
 	handleUiStateChange = (state: UiState) => {
-		const { controllerPage, modMatrix: { isOpen } } = state;
+		const { controllerPage, modMatrix: { mode } } = state;
 		range(4).forEach(i => {
 			this.lcxl.setDirectionLed(i, i === controllerPage ? 'redH' : 'off');
 		});
 		range(4).forEach(i => {
-			this.lcxl.setSideLed(i, (i === 3) && isOpen ? 'amberH' : 'off');
-			// this.lcxl.setSideLed(i, 'redH');
+			this.lcxl.setSideLed(i, (i === 3) && this.modMatrixModeColors[mode]);
 		});
 	}
 

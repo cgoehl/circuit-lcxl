@@ -5,6 +5,7 @@ export type UiControl
 	| UiGrid;
 
 export type UiOrientation = 'centered' | 'zeroBased';
+export type UiModMatrixMode = 'open' | 'awaitingCombo' | 'closed';
 
 export interface UiState {
 	controllerAnchor: IPoint2,
@@ -12,7 +13,7 @@ export interface UiState {
 	synthNumber: 0 | 1,
 	modMatrix: {
 		slot: number,
-		isOpen: false,
+		mode: UiModMatrixMode,
 	},
 }
 
