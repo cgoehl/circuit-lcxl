@@ -1,6 +1,6 @@
 import { MidiParameter } from "../../shared/MidiParameter";
 import { UiGrid, UiParameter } from "../../shared/UiDtos";
-import { IPoint2 } from "../../shared/utils";
+import { IPoint2, range } from "../../shared/utils";
 
 export class UiLayout {
 
@@ -56,6 +56,20 @@ export class UiLayout {
 
 	getAt = (coords: IPoint2) => this.items[this.toIndex(coords)];
 
+	public subGrid = (topLeft: IPoint2, size: IPoint2): UiLayout => {
+		const res = new UiLayout(
+			this.parameters,
+			size.x,
+			size.y,
+		);
+		range(size.x).forEach(x => {
+			range(size.y).forEach(y => {
+				res.setAt({ x, y }, this.getAt({ x: x + topLeft.x, y: y + topLeft.y}));
+			})
+		});
+		return res;
+	}
+
 	private toIndex = (coords: IPoint2) => {
 		const { x, y } = coords;
 		if (x >= this.columns || y >= this.rows)
@@ -67,7 +81,7 @@ export class UiLayout {
 		if (name === '---') { return null; }
 		const param = this.parameters[name];
 		if (!param ) { throw new Error(`No such parameter: ${name}`); }
-		const { sysexAddress, valueNames, orientation, minValue, maxValue, color, label, readLsb, readMsb } = param;
+		const { sysexAddress, valueNames, modDestination, orientation, minValue, maxValue, color, label, readLsb, readMsb } = param;
 		return {
 			name,
 			type: 'parameter',
@@ -78,6 +92,7 @@ export class UiLayout {
 			address: sysexAddress,
 			orientation,
 			valueNames,
+			modDestination,
 			readLsb, 
 			readMsb
 		};

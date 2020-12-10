@@ -60,6 +60,7 @@ function convertRow(row: any): MidiParameter {
 		notes,
 		readLsb, 
 		readMsb,
+		modDest,
 		offset
 	} = row;
 	const protocol: MidiParameterProtocol = cc_msb 
@@ -73,6 +74,7 @@ function convertRow(row: any): MidiParameter {
 		lsb: Number.parseInt(nrpn_lsb),
 	};
 	const sysexAddress = getSysexAddress(parameter_description);
+	const modDestination = (modDest && modDest.length) ? +modDest : null;
 
 	return {
 		section,
@@ -85,6 +87,7 @@ function convertRow(row: any): MidiParameter {
 		label,
 		color,
 		valueNames: convertNotes(notes),
+		modDestination,
 		readLsb: +readLsb, 
 		readMsb: +readMsb,
 		offset: +offset,

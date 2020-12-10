@@ -1,9 +1,6 @@
-import { stat } from "fs";
-import { MidiParameter } from "../../shared/MidiParameter";
 import { UiModMatrixMode, UiState } from "../../shared/UiDtos";
 import { IPoint2, range } from "../../shared/utils";
 import { Lcxl } from "../NovationLcxl";
-import { Button, Knob } from "../PhysicalControl";
 import { CircuitVirtualController } from "./WebController";
 
 
@@ -40,21 +37,34 @@ export class PhysicalVirtualAdapter {
 	};
 
 	handleModMatrixButton = (isPressed: boolean) => {
-		this.virtual.updateState((state: UiState) => {
+		const { virtual, lcxl } = this;
+		virtual.updateState((state: UiState) => {
 			const { modMatrix: { mode, slot }} = state;
 			let newMode: UiModMatrixMode = 
 				(mode === 'closed' && isPressed) ? 'awaitingCombo' :
 				(mode === 'awaitingCombo' && !isPressed) ? 'open' :
-				(mode === 'open') ? 'closed' : mode;
+				(mode === 'open' && isPressed) ? 'closed' : mode;
+			if (newMode === mode) { return state; }
+			console.log(newMode);
 			return {
 				...state,
 				modMatrix: { mode: newMode, slot },
 		}});
+		const { state: { modMatrix: { mode }}} = virtual;
+		lcxl.clearLeds();
+		if (mode === 'awaitingCombo') {
+			virtual.getLedHighlights().forEach(i => {
+				lcxl.setGridLed(i, 'amberH');
+			})
+		} else if (mode === 'open') {
+			range(4).forEach(i => lcxl.setGridLed(i + 4, 'greenH'));
+			lcxl.setGridLed(0, 'greenH');
+		}
 	}
 
 	readonly modMatrixModeColors = {
 		open: 'amberH',
-		awaitingCombo: 'greenH',
+		awaitingCombo: 'green',
 		closed: 'off',
 	};
 	
@@ -64,7 +74,7 @@ export class PhysicalVirtualAdapter {
 			this.lcxl.setDirectionLed(i, i === controllerPage ? 'redH' : 'off');
 		});
 		range(4).forEach(i => {
-			this.lcxl.setSideLed(i, (i === 3) && this.modMatrixModeColors[mode]);
+			this.lcxl.setSideLed(i, (i === 3) ? this.modMatrixModeColors[mode] : 'off');
 		});
 	}
 

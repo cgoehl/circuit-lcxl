@@ -9,6 +9,7 @@ export interface MidiParameter {
 	protocol: MidiParameterProtocol;
 	orientation: 'centered' | 'zeroBased',
 	valueNames: null | { [key: string]: string },
+	modDestination: number | null,
 	readLsb: number,
 	readMsb: number,
 	offset: number,

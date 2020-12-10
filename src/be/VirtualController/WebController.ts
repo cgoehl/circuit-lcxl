@@ -9,7 +9,9 @@ export class CircuitVirtualController extends EventEmitter<{
 	changed: (newValue: UiState) => void,
 }>{
 
-	private state : UiState = {
+	private controllerSize = { x: 8, y: 4 };
+
+	public state : UiState = {
 		controllerPage: 0,
 		controllerAnchor: { x: 0, y: 0 },
 		synthNumber: 0,
@@ -58,8 +60,30 @@ export class CircuitVirtualController extends EventEmitter<{
 				}
 				const { source1Address, source2Address, depthAddress, destinationAddress } = s;
 				const address = [ source1Address, source2Address, depthAddress, destinationAddress ][col - 4];
-				this.circuit.setMidiParam(this.state.synthNumber, this.circuit.parametersByAddress[address], value);
+				this.circuit.setMidiParamClamped(this.state.synthNumber, this.circuit.parametersByAddress[address], value);
 			}
+		} else if (mode === 'awaitingCombo') {
+			if (value == null) { return; }
+			const absVKnob = { x: col + x, y: row + y };
+			const uiParam = this.knobUi.getAt(absVKnob);
+			const { modDestination } = uiParam;
+			if (modDestination === null ) { return; }
+			const { slots } = this.modMatrixUi;
+			let activeSlot = slots.find( slot => {
+				const activeDestination = this.circuit.getPatch(this.state.synthNumber).bytes[slot.destinationAddress];
+				return activeDestination === modDestination;
+			});
+			if (!activeSlot) {
+				activeSlot = slots.find( (slot, i) => {
+					console.log('findslot', i, this.circuit.getPatch(this.state.synthNumber).bytes[slot.destinationAddress]); 
+					return this.circuit.getPatch(this.state.synthNumber).bytes[slot.destinationAddress] === 0;
+				});
+				if (!activeSlot) { return; }
+				const param = this.circuit.parametersByAddress[activeSlot.destinationAddress];
+				// ToDo: Yes, doing lazy stuff always pays back :(; Doing inverse scaling should not be needed here and clamping should not happen like that in setMidiParam
+				this.circuit.setMidiParamDirect(this.state.synthNumber, param, modDestination);
+			}
+			this.updateState(state => ({ ...state, modMatrix: { slot: activeSlot.slotNumber - 1, mode: 'open' }}));
 		} else {
 			if (value == null) { return; }
 			const absVKnob = { x: col + x, y: row + y };
@@ -67,9 +91,21 @@ export class CircuitVirtualController extends EventEmitter<{
 			if (!uiParam) { return; }
 			const midiParam = this.circuit.parametersByName[uiParam.name];
 			if (!midiParam) { return; }
-			this.circuit.setMidiParam(this.state.synthNumber, midiParam, value);
+			this.circuit.setMidiParamClamped(this.state.synthNumber, midiParam, value);
 		}
+	}
 
+	getLedHighlights = () => {
+		const { modMatrix: { mode }} = this.state;
+		if (mode === 'awaitingCombo') {
+			const { controllerAnchor } = this.state;
+			const { controllerSize } = this;
+			const controllerGrid = this.knobUi.subGrid(controllerAnchor, controllerSize);
+			return controllerGrid.items
+				.map((param, index) => ({index, param}))
+				.filter(p => p.param && p.param.modDestination !== null)
+				.map(p => p.index);
+		}
 	}
 
 	updateState = (func: (state: UiState) => UiState) => {

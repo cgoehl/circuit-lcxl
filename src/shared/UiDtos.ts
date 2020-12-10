@@ -28,6 +28,7 @@ export interface UiParameter {
 	readLsb: number,
 	readMsb: number,
 	orientation: UiOrientation,
+	modDestination: number | null,
 	valueNames: null | { [key: string]: string },
 }
 

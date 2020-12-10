@@ -37,21 +37,33 @@ export class NovationCircuit extends BaseDevice<{
 		this.raisePatchChange(1);
 	}
 	
-	setMidiParam = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
-		const { protocol: { type }, minValue, maxValue, offset} = midiParam;
+	setMidiParamClamped = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
+		const { minValue, maxValue } = midiParam;
 		const clampedValue = Math.floor((value/128) * (maxValue - minValue + 1)) + minValue;
+		this.setMidiParamDirect(synthNumber, midiParam, clampedValue);
+	}
+
+	setMidiParamDirect = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
+		const { protocol: { type }, offset} = midiParam;
+		console.log(value)
 		switch(type) {
 			case 'cc': {
-				this.setCcParam(synthNumber, midiParam.protocol as MidiCc, clampedValue + offset);
+				this.setCcParam(synthNumber, midiParam.protocol as MidiCc, value + offset);
 				break;
 			}
 			case 'nrpn': {
-				this.setNrpnParam(synthNumber, midiParam.protocol as MidiNrpn, clampedValue + offset);
+				this.setNrpnParam(synthNumber, midiParam.protocol as MidiNrpn, value + offset);
 				break;
 			}
 			default: throw new Error(`Type not implemented: ${type}`);
 		}
-		this.updatePatch(synthNumber, midiParam, clampedValue);
+		this.updatePatch(synthNumber, midiParam, value);
+	}
+
+	public getPatch = (synthNumber: 0 | 1): CircuitPatch => {
+		return synthNumber === 0
+			? this.patch0.get()
+			: this.patch1.get();
 	}
 
 	private updatePatch = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
