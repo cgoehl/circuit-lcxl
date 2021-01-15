@@ -45,7 +45,6 @@ export class NovationCircuit extends BaseDevice<{
 
 	setMidiParamDirect = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
 		const { protocol: { type }, offset} = midiParam;
-		console.log(value)
 		switch(type) {
 			case 'cc': {
 				this.setCcParam(synthNumber, midiParam.protocol as MidiCc, value + offset);
@@ -73,7 +72,6 @@ export class NovationCircuit extends BaseDevice<{
 			: this.patch1;
 		var currentValue = target.get().bytes[sysexAddress];
 		target.get().bytes[sysexAddress] = setNumberAtBitRange(currentValue, value, readLsb, readMsb);
-		console.log(target.get().bytes[sysexAddress].toString(2), value, currentValue );
 		//todo this is a hack, maybe we should just remove the Property-class entirely
 		target.set(target.get());
 		this.raisePatchChange(synthNumber);
