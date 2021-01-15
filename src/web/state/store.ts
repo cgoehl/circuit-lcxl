@@ -1,5 +1,6 @@
 import { UiGrid, UiModMatrix, UiState } from '../../shared/UiDtos';
 import { Action, createStore, Store } from 'redux';
+import { type } from 'os';
 
 export interface ICircuitPatchState {
 	bytes: number[],
@@ -17,6 +18,8 @@ export interface ILayoutState {
 	matrix: UiModMatrix,
 	knobs: UiGrid,
 }
+
+export type SynthNumber = 0 | 1;
 
 
 export interface IAppState {
@@ -38,11 +41,11 @@ interface PatchUpdateAction {
 	type: 'PATCH_UPDATE',
 	payload: { 
 		patch: ICircuitPatchState,
-		synthNumber: 0 | 1
+		synthNumber: SynthNumber
 	},
 }
 
-export const patchUpdate = (patch: ICircuitPatchState, synthNumber: 0 | 1) => ({
+export const patchUpdate = (patch: ICircuitPatchState, synthNumber: SynthNumber) => ({
 	type: 'PATCH_UPDATE',
 	payload: { patch, synthNumber },
 });

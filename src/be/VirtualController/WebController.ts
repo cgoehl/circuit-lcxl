@@ -108,6 +108,8 @@ export class CircuitVirtualController extends EventEmitter<{
 		}
 	}
 
+	refresh = () => this.circuit.reloadPatches();
+
 	updateState = (func: (state: UiState) => UiState) => {
 		this.state = func(this.state);
 		this.emit('changed', this.state);

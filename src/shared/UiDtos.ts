@@ -7,6 +7,7 @@ export type UiControl
 export type UiOrientation = 'centered' | 'zeroBased';
 export type UiModMatrixMode = 'open' | 'awaitingCombo' | 'closed';
 
+
 export interface UiState {
 	controllerAnchor: IPoint2,
 	controllerPage: number,

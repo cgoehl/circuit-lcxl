@@ -6,11 +6,12 @@ import { readControls as readMidiMapping } from './midiMappingRead';
 import { CircuitPatch } from './Patch';
 import { Property } from '../../shared/Property';
 
+export type SynthNumber = 0 | 1;
 
 export class NovationCircuit extends BaseDevice<{
-	patchChanged: (synthNumber: 0 | 1, patch: CircuitPatch) => void,
+	patchChanged: (synthNumber: SynthNumber, patch: CircuitPatch) => void,
 }> {
-
+	
 	public flatParameters: MidiParameter[];
 	public parametersByName: {[name: string]: MidiParameter} = null;
 	public parametersByAddress: {[address: string]: MidiParameter} = null;
@@ -26,24 +27,28 @@ export class NovationCircuit extends BaseDevice<{
 		this.parametersByAddress = arrayToObject(this.flatParameters, p => p.sysexAddress.toString());
 		const { input, output } = this.midi;
 		input.on('sysex' as any, (msg: any) => this.handleSysex(msg.bytes) as any);
-		input.on('program', message => this.sendPatchDumpRequest(message.channel as 0 | 1));
-		this.sendPatchDumpRequest(0);
-		await delay(200);
-		this.sendPatchDumpRequest(1);
+		input.on('program', message => this.loadPatch(message.channel as SynthNumber));
+		await this.reloadPatches();
 	}
 
 	announceState = () => {
 		this.raisePatchChange(0);
 		this.raisePatchChange(1);
 	}
+
+	reloadPatches = async () => {
+		this.loadPatch(0);
+		await delay(200);
+		this.loadPatch(1);
+	}
 	
-	setMidiParamClamped = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
+	setMidiParamClamped = (synthNumber: SynthNumber, midiParam: MidiParameter, value: number) => {
 		const { minValue, maxValue } = midiParam;
 		const clampedValue = Math.floor((value/128) * (maxValue - minValue + 1)) + minValue;
 		this.setMidiParamDirect(synthNumber, midiParam, clampedValue);
 	}
 
-	setMidiParamDirect = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
+	setMidiParamDirect = (synthNumber: SynthNumber, midiParam: MidiParameter, value: number) => {
 		const { protocol: { type }, offset} = midiParam;
 		switch(type) {
 			case 'cc': {
@@ -59,13 +64,13 @@ export class NovationCircuit extends BaseDevice<{
 		this.updatePatch(synthNumber, midiParam, value);
 	}
 
-	public getPatch = (synthNumber: 0 | 1): CircuitPatch => {
+	public getPatch = (synthNumber: SynthNumber): CircuitPatch => {
 		return synthNumber === 0
 			? this.patch0.get()
 			: this.patch1.get();
 	}
 
-	private updatePatch = (synthNumber: 0 | 1, midiParam: MidiParameter, value: number) => {
+	private updatePatch = (synthNumber: SynthNumber, midiParam: MidiParameter, value: number) => {
 		const { sysexAddress, readLsb, readMsb } = midiParam;
 		const target = synthNumber === 0
 			? this.patch0
@@ -77,27 +82,27 @@ export class NovationCircuit extends BaseDevice<{
 		this.raisePatchChange(synthNumber);
 	}
 
-	private setCcParam = (synthNumber: 0 | 1, protocol: MidiCc, value: number) => {
+	private setCcParam = (synthNumber: SynthNumber, protocol: MidiCc, value: number) => {
 		const { msb } = protocol;
 		this.midi.output.send('cc', { channel: synthNumber, controller: msb, value });
 	}
 
-	private setNrpnParam = (synthNumber: 0 | 1, protocol: MidiNrpn, value: number) => {
+	private setNrpnParam = (synthNumber: SynthNumber, protocol: MidiNrpn, value: number) => {
 		const { msb, lsb } = protocol;
 		this.midi.output.send('cc', { channel: synthNumber, controller: 99, value: msb });
 		this.midi.output.send('cc', { channel: synthNumber, controller: 98, value: lsb });
 		this.midi.output.send('cc', { channel: synthNumber, controller: 6, value });
 	}
 	
-	private raisePatchChange = (synthNumber: 0 | 1) => {
+	private raisePatchChange = (synthNumber: SynthNumber) => {
 		const patch = synthNumber === 0
 			?	this.patch0.get()
 			:	this.patch1.get();
 		this.emit('patchChanged', synthNumber, patch);
 	}
 	
-	private __currentDumpRequestSynth: 0 | 1 = 0;
-	private sendPatchDumpRequest = (synth: 0 | 1) => {
+	private __currentDumpRequestSynth: SynthNumber = 0;
+	private loadPatch = (synth: SynthNumber) => {
 		const msg = [
 			...circuitSysex.header,
 			circuitSysex.commands.currentPatchDump,

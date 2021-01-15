@@ -25,8 +25,13 @@ export class PhysicalVirtualAdapter {
 		})
 		lcxl.on('sideButton', button => {
 			const { location: { index }, isPressed } = button;
-			if (index === 3) { 
-				this.handleModMatrixButton(isPressed);
+			switch(index) {
+				case 0:
+					this.handleReloadButton();
+					break;
+				case 3:
+					this.handleModMatrixButton(isPressed);
+					break;
 			}
 		});
 		lcxl.on('knob', knob => {
@@ -35,6 +40,10 @@ export class PhysicalVirtualAdapter {
 		})
 		virtual.on('changed', this.handleUiStateChange);
 	};
+
+	handleReloadButton = () => {
+		this.virtual.refresh();
+	}
 
 	handleModMatrixButton = (isPressed: boolean) => {
 		const { virtual, lcxl } = this;
