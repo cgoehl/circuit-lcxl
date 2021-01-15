@@ -4,7 +4,7 @@ import { startBroker } from './Broker';
 import { Knob } from './PhysicalControl';
 import { Channel, getInputs, getOutputs, Input, Note, Output } from 'easymidi';
 import { NovationCircuit } from './NovationCircuit/NovationCircuit';
-import { CircuitVirtualController } from './VirtualController/WebController';
+import { CircuitVirtualController } from './VirtualController/CircuitVirtualController';
 import { PhysicalVirtualAdapter } from "./VirtualController/PhysicalController";
 import { delay } from '../shared/utils';
 

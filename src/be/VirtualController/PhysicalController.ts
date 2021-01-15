@@ -1,7 +1,7 @@
 import { UiModMatrixMode, UiState } from "../../shared/UiDtos";
 import { IPoint2, range } from "../../shared/utils";
 import { Lcxl } from "../NovationLcxl";
-import { CircuitVirtualController } from "./WebController";
+import { CircuitVirtualController } from "./CircuitVirtualController";
 
 
 export class PhysicalVirtualAdapter {
