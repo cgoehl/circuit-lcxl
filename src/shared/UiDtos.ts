@@ -23,6 +23,7 @@ export interface UiParameter {
 	type: 'parameter',
 	label: string,
 	color: string,
+	simpleColor : string,
 	minValue: number,
 	maxValue: number,
 	address: number,

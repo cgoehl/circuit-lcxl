@@ -3,6 +3,7 @@ import { UiModMatrix, UiModMatrixSlot, UiParameter, UiState } from "../../shared
 import { IPoint2, range } from "../../shared/utils";
 import { IBroker } from "../Broker";
 import { NovationCircuit } from "../NovationCircuit/NovationCircuit";
+import { LcxlGridColor } from "../NovationLcxl";
 import { UiLayout } from "./UiLayout";
 
 export class CircuitVirtualController extends EventEmitter<{
@@ -95,16 +96,27 @@ export class CircuitVirtualController extends EventEmitter<{
 		}
 	}
 
-	getLedHighlights = () => {
-		const { modMatrix: { mode }} = this.state;
-		if (mode === 'awaitingCombo') {
-			const { controllerAnchor } = this.state;
-			const { controllerSize } = this;
-			const controllerGrid = this.knobUi.subGrid(controllerAnchor, controllerSize);
-			return controllerGrid.items
-				.map((param, index) => ({index, param}))
-				.filter(p => p.param && p.param.modDestination !== null)
-				.map(p => p.index);
+	getGridLeds = (): { index: number, color: LcxlGridColor }[] => {
+		const { modMatrix: { mode }, controllerAnchor} = this.state;
+		const { controllerSize } = this;
+		const controllerGrid = this.knobUi.subGrid(controllerAnchor, controllerSize);
+
+		switch (mode) {
+			case 'open': {
+				return 	range(4)
+					.map(index => ({ index, color: 'greenH' }));
+			}
+			case 'awaitingCombo': {
+				return controllerGrid.items
+					.map((param, index) => ({index, param}))
+					.filter(p => p.param && p.param.modDestination !== null)
+					.map(({ index }) => ({ index, color: 'amberH' }));
+			}
+			case 'closed': {
+				return controllerGrid.items
+					.filter(p => p)
+					.map(({ simpleColor }, index) => ({ index, color: simpleColor as LcxlGridColor }));
+			}
 		}
 	}
 

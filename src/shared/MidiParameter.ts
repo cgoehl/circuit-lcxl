@@ -3,6 +3,7 @@ export interface MidiParameter {
 	name: string;
 	label: string;
 	color: string;
+	simpleColor: string;
 	sysexAddress: number;	
 	minValue: number;
 	maxValue: number;

@@ -59,31 +59,27 @@ export class PhysicalVirtualAdapter {
 				...state,
 				modMatrix: { mode: newMode, slot },
 		}});
-		const { state: { modMatrix: { mode }}} = virtual;
-		lcxl.clearLeds();
-		if (mode === 'awaitingCombo') {
-			virtual.getLedHighlights().forEach(i => {
-				lcxl.setGridLed(i, 'amberH');
-			})
-		} else if (mode === 'open') {
-			range(4).forEach(i => lcxl.setGridLed(i + 4, 'greenH'));
-			lcxl.setGridLed(0, 'greenH');
-		}
 	}
 
 	readonly modMatrixModeColors = {
-		open: 'amberH',
-		awaitingCombo: 'green',
-		closed: 'off',
+		open: 'redL',
+		awaitingCombo: 'amberH',
+		closed: 'greenL',
 	};
 	
 	handleUiStateChange = (state: UiState) => {
 		const { controllerPage, modMatrix: { mode } } = state;
+		this.lcxl.clearLeds();
 		range(4).forEach(i => {
 			this.lcxl.setDirectionLed(i, i === controllerPage ? 'redH' : 'off');
 		});
-		range(4).forEach(i => {
-			this.lcxl.setSideLed(i, (i === 3) ? this.modMatrixModeColors[mode] : 'off');
+		// range(4).forEach(i => {
+		// 	this.lcxl.setSideLed(i, (i === 3) ? this.modMatrixModeColors[mode] : 'off');
+		// });
+		this.lcxl.setSideLed(0, 'greenL');
+		this.lcxl.setSideLed(3, this.modMatrixModeColors[mode]);
+		this.virtual.getGridLeds().forEach(({index, color}) => {
+			this.lcxl.setGridLed(index, color);
 		});
 	}
 

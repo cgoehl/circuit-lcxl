@@ -3,6 +3,15 @@ import { BaseDevice, detectMidi, IMidiIO } from '../BaseDevice';
 import { Knob, Button } from '../PhysicalControl';
 import { range } from '../../shared/utils';
 
+export type LcxlGridColor
+	= 'off'
+	| 'greenH'
+	| 'greenL'
+	| 'yellow'
+	| 'amberH'
+	| 'redL'
+	| 'redH';
+
 class LcxlLedEncoder {
 	colorCodes = {
 		off: 12,
@@ -98,7 +107,7 @@ export class Lcxl extends BaseDevice<{
 		this.setCcLed(104 + index)(color);
 	}
 
-	setGridLed = (index: number, color: number | string): void => 
+	setGridLed = (index: number, color: number | LcxlGridColor): void => 
 		this.setNoteLed(Lcxl.gridLedNotes[index])(color);
 
 	setSideLed = (index: number, color: number | string): void => 
