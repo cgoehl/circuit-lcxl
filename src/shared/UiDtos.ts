@@ -11,7 +11,7 @@ export type UiModMatrixMode = 'open' | 'awaitingCombo' | 'closed';
 export interface UiState {
 	controllerAnchor: IPoint2,
 	controllerPage: number,
-	synthNumber: 0 | 1,
+	activeSynth: 0 | 1,
 	modMatrix: {
 		slot: number,
 		mode: UiModMatrixMode,

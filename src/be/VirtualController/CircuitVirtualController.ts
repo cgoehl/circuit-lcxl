@@ -15,7 +15,7 @@ export class CircuitVirtualController extends EventEmitter<{
 	public state : UiState = {
 		controllerPage: 0,
 		controllerAnchor: { x: 0, y: 0 },
-		synthNumber: 0,
+		activeSynth: 0,
 		modMatrix: {
 			slot: 0,
 			mode: 'closed'
@@ -61,7 +61,7 @@ export class CircuitVirtualController extends EventEmitter<{
 				}
 				const { source1Address, source2Address, depthAddress, destinationAddress } = s;
 				const address = [ source1Address, source2Address, depthAddress, destinationAddress ][col - 4];
-				this.circuit.setMidiParamClamped(this.state.synthNumber, this.circuit.parametersByAddress[address], value);
+				this.circuit.setMidiParamClamped(this.state.activeSynth, this.circuit.parametersByAddress[address], value);
 			}
 		} else if (mode === 'awaitingCombo') {
 			if (value == null) { return; }
@@ -71,18 +71,18 @@ export class CircuitVirtualController extends EventEmitter<{
 			if (modDestination === null ) { return; }
 			const { slots } = this.modMatrixUi;
 			let activeSlot = slots.find( slot => {
-				const activeDestination = this.circuit.getPatch(this.state.synthNumber).bytes[slot.destinationAddress];
+				const activeDestination = this.circuit.getPatch(this.state.activeSynth).bytes[slot.destinationAddress];
 				return activeDestination === modDestination;
 			});
 			if (!activeSlot) {
 				activeSlot = slots.find( (slot, i) => {
-					console.log('findslot', i, this.circuit.getPatch(this.state.synthNumber).bytes[slot.destinationAddress]); 
-					return this.circuit.getPatch(this.state.synthNumber).bytes[slot.destinationAddress] === 0;
+					console.log('findslot', i, this.circuit.getPatch(this.state.activeSynth).bytes[slot.destinationAddress]); 
+					return this.circuit.getPatch(this.state.activeSynth).bytes[slot.destinationAddress] === 0;
 				});
 				if (!activeSlot) { return; }
 				const param = this.circuit.parametersByAddress[activeSlot.destinationAddress];
 				// ToDo: Yes, doing lazy stuff always pays back :(; Doing inverse scaling should not be needed here and clamping should not happen like that in setMidiParam
-				this.circuit.setMidiParamDirect(this.state.synthNumber, param, modDestination);
+				this.circuit.setMidiParamDirect(this.state.activeSynth, param, modDestination);
 			}
 			this.updateState(state => ({ ...state, modMatrix: { slot: activeSlot.slotNumber - 1, mode: 'open' }}));
 		} else {
@@ -92,7 +92,7 @@ export class CircuitVirtualController extends EventEmitter<{
 			if (!uiParam) { return; }
 			const midiParam = this.circuit.parametersByName[uiParam.name];
 			if (!midiParam) { return; }
-			this.circuit.setMidiParamClamped(this.state.synthNumber, midiParam, value);
+			this.circuit.setMidiParamClamped(this.state.activeSynth, midiParam, value);
 		}
 	}
 

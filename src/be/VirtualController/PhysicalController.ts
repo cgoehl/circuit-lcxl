@@ -13,7 +13,6 @@ export class PhysicalVirtualAdapter {
 
 	start = async () => {
 		const {  lcxl, virtual } = this;
-		lcxl.clearLeds();
 		lcxl.on('directionButton', button => {
 			const { location: { index }, isPressed } = button;
 			if (!isPressed) { return; }
@@ -27,6 +26,12 @@ export class PhysicalVirtualAdapter {
 			const { location: { index }, isPressed } = button;
 			switch(index) {
 				case 0:
+					this.virtual.updateState(state => ({...state, activeSynth: 0 }));
+					break;
+				case 1:
+					this.virtual.updateState(state => ({...state, activeSynth: 1 }));
+					break;
+				case 2:
 					this.handleReloadButton();
 					break;
 				case 3:
@@ -39,6 +44,7 @@ export class PhysicalVirtualAdapter {
 			virtual.handleControlChange(col, row, value);
 		})
 		virtual.on('changed', this.handleUiStateChange);
+		this.handleUiStateChange(virtual.state);
 	};
 
 	handleReloadButton = () => {
@@ -68,15 +74,14 @@ export class PhysicalVirtualAdapter {
 	};
 	
 	handleUiStateChange = (state: UiState) => {
-		const { controllerPage, modMatrix: { mode } } = state;
+		const { controllerPage, modMatrix: { mode }, activeSynth } = state;
 		this.lcxl.clearLeds();
 		range(4).forEach(i => {
 			this.lcxl.setDirectionLed(i, i === controllerPage ? 'redH' : 'off');
 		});
-		// range(4).forEach(i => {
-		// 	this.lcxl.setSideLed(i, (i === 3) ? this.modMatrixModeColors[mode] : 'off');
-		// });
-		this.lcxl.setSideLed(0, 'greenL');
+		this.lcxl.setSideLed(0, activeSynth === 0 ? 'greenL' : 'off');
+		this.lcxl.setSideLed(1, activeSynth === 1 ? 'greenL' : 'off');
+		this.lcxl.setSideLed(2, 'greenL');
 		this.lcxl.setSideLed(3, this.modMatrixModeColors[mode]);
 		this.virtual.getGridLeds().forEach(({index, color}) => {
 			this.lcxl.setGridLed(index, color);
