@@ -42,13 +42,13 @@ export class NovationCircuit extends BaseDevice<{
 		this.loadPatch(1);
 	}
 	
-	setMidiParamClamped = (synthNumber: SynthNumber, midiParam: MidiParameter, value: number) => {
+	setMidiParamRelative = (synthNumber: SynthNumber, midiParam: MidiParameter, value: number) => {
 		const { minValue, maxValue } = midiParam;
 		const clampedValue = Math.floor((value/128) * (maxValue - minValue + 1)) + minValue;
-		this.setMidiParamDirect(synthNumber, midiParam, clampedValue);
+		this.setMidiParamAbsolute(synthNumber, midiParam, clampedValue);
 	}
 
-	setMidiParamDirect = (synthNumber: SynthNumber, midiParam: MidiParameter, value: number) => {
+	setMidiParamAbsolute = (synthNumber: SynthNumber, midiParam: MidiParameter, value: number) => {
 		const { protocol: { type }, offset} = midiParam;
 		switch(type) {
 			case 'cc': {
