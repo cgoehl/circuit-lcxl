@@ -25,7 +25,7 @@ function CellComponent(props: CellComponentParams) {
 }
 
 const CellContainer = connect((state: IAppState, props: {index: number}) => {
-	const { ui: { layout: { knobs: { items }}}, circuit: { patch0: { bytes }}} = state;
+	const { ui: { layout: { knobs: { items }}, state: { activeSynth }}, circuit } = state;
 
 	const { index } = props;
 	const param = items[index];
@@ -33,7 +33,7 @@ const CellContainer = connect((state: IAppState, props: {index: number}) => {
 		const { address } = param;
 		return { 
 			param,
-			value: bytes[address],
+			value: (activeSynth === 0 ? circuit.patch0 : circuit.patch1).bytes[address],
 		};
 	}
 	return { param: null, value: -1 };

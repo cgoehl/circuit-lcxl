@@ -41,7 +41,7 @@ export function MatrixSlotComponent(props: {
 }
 
 const MatrixSlotContainer = connect((state: IAppState, props: {slotIndex: number, isActive: boolean}) => {
-	const { ui: { layout: { matrix: { slots, destinations, sources }}}, circuit: { patch0: { bytes }} } = state;
+	const { ui: { layout: { matrix: { slots, destinations, sources }}, state: { activeSynth }}, circuit } = state;
 	const { slotIndex, isActive } = props;
 	const {
 		slotNumber,
@@ -50,7 +50,7 @@ const MatrixSlotContainer = connect((state: IAppState, props: {slotIndex: number
 		depthAddress,
 		destinationAddress,
 	} = slots[slotIndex];
-	const getValue = (address: number) => bytes[address];
+	const getValue = (address: number) => (activeSynth === 0 ? circuit.patch0 : circuit.patch1).bytes[address];
 	return {
 		slotNumber,
 		sources,

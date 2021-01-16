@@ -11,10 +11,11 @@
 	}
 
 	._null {
-		background-color: black;
-		border: 0.5px solid black;
 		box-sizing: border-box;
 		width: 100%;
 		height: 100%;
 	}
 }
+
+.active-synth-0 { background-color: #505; }
+.active-synth-1 { background-color: #055; }

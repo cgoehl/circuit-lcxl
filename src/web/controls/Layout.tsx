@@ -6,14 +6,19 @@ import { MatrixContainer } from './MatrixComponent';
 import './LayoutComponent.scss';
 
 function LayoutComponent(props: {
-	isOpen: boolean
+	isOpen: boolean,
+	activeSynth: number,
 }) {
-	return props.isOpen
+	return ( 
+	<div className={`active-synth-${props.activeSynth}`} >
+		{ props.isOpen
 		? <MatrixContainer />
-		: <GridContainer />
+		: <GridContainer /> }
+	</div>
+	);
 }
 
 export const LayoutContainer = connect((state: IAppState) => {
-	const { ui: { state: { modMatrix: { mode }}}} = state;
-	return { isOpen: mode === 'open' }
+	const { ui: { state: { modMatrix: { mode }, activeSynth }}} = state;
+	return { isOpen: mode === 'open', activeSynth }
 })(LayoutComponent);
