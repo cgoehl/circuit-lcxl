@@ -103,8 +103,8 @@ export class CircuitVirtualController extends EventEmitter<{
 
 		switch (mode) {
 			case 'open': {
-				return 	range(4)
-					.map(index => ({ index, color: 'greenH' }));
+				return range(4)
+					.map(index => ({ index: index + 4, color: 'greenH' }));
 			}
 			case 'awaitingCombo': {
 				return controllerGrid.items
@@ -114,8 +114,7 @@ export class CircuitVirtualController extends EventEmitter<{
 			}
 			case 'closed': {
 				return controllerGrid.items
-					.filter(p => p)
-					.map(({ simpleColor }, index) => ({ index, color: simpleColor as LcxlGridColor }));
+					.map((param, index) => ({ index, color: ( param ? param.simpleColor : 'off' ) as LcxlGridColor }));
 			}
 		}
 	}

@@ -5,7 +5,7 @@ import './EnumParameterComponent.scss';
 export function EnumParameterComponent(props: {
 	param: { 
 		label: string, 
-		color: string, 
+		simpleColor: string, 
 		valueNames: { [value: string]: string } | null,
 		readLsb: number,
 		readMsb: number,
@@ -13,7 +13,7 @@ export function EnumParameterComponent(props: {
 	value: number,
 }) {
 	const { value: rawValue, param } = props;
-	const { label, color, valueNames, readLsb, readMsb } = param;
+	const { label, simpleColor, valueNames, readLsb, readMsb } = param;
 	const value = getNumberAtBitRange(rawValue, readLsb, readMsb);
 	console.log(label, rawValue, value, readLsb, readMsb)
 
@@ -26,7 +26,7 @@ export function EnumParameterComponent(props: {
 	}
 
 	return (
-		<div className='enum-parameter' style={{ backgroundColor: color }}>
+		<div className={`enum-parameter simple-color-${simpleColor}`}>
 			<div className='_enum-values'>
 				{renderRow(value + 2)}
 				{renderRow(value + 1)}
