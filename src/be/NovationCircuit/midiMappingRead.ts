@@ -24,10 +24,10 @@ export async function readFile(path: string): Promise<object[]> {
 const sysexAddressRegex = /sysex patch address: (\d+)/;
 const getSysexAddress = (str: string) : number => {
 	const matchResult = sysexAddressRegex.exec(str);
-	if(matchResult[1]) {
+	if(matchResult && matchResult[1]) {
 		return Number.parseInt(matchResult[1]);
 	}
-	throw new Error(`No match for: ${str}`);
+	return -1;
 }
 
 function convertNotes(notes: string): { [key: string]: string } | null {
