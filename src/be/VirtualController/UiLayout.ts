@@ -81,12 +81,11 @@ export class UiLayout {
 		if (name === '---') { return null; }
 		const param = this.parameters[name];
 		if (!param ) { throw new Error(`No such parameter: ${name}`); }
-		const { sysexAddress, valueNames, modDestination, orientation, minValue, maxValue, color, simpleColor, label, readLsb, readMsb } = param;
+		const { sysexAddress, valueNames, modDestination, orientation, minValue, maxValue, simpleColor, label, readLsb, readMsb } = param;
 		return {
 			name,
 			type: 'parameter',
 			label: label,
-			color,
 			simpleColor,
 			minValue,
 			maxValue,

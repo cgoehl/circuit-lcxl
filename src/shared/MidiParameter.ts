@@ -2,7 +2,6 @@ export interface MidiParameter {
 	section: string;
 	name: string;
 	label: string;
-	color: string;
 	simpleColor: string;
 	sysexAddress: number;	
 	minValue: number;

@@ -21,15 +21,6 @@ export async function readFile(path: string): Promise<object[]> {
 	});
 }
 
-const sysexAddressRegex = /sysex patch address: (\d+)/;
-const getSysexAddress = (str: string) : number => {
-	const matchResult = sysexAddressRegex.exec(str);
-	if(matchResult && matchResult[1]) {
-		return Number.parseInt(matchResult[1]);
-	}
-	return -1;
-}
-
 function convertNotes(notes: string): { [key: string]: string } | null {
 	if (notes && notes.length) {
 		const parts = notes.split('; ');
@@ -50,13 +41,12 @@ function convertRow(row: any): MidiParameter {
 		parameter_name,
 		min,
 		max,
-		parameter_description,
-		cc_msb,
+		sysex_addr,
+		cc,
 		nrpn_msb,
 		nrpn_lsb,
 		orientation,
 		label,
-		color,
 		notes,
 		readLsb, 
 		readMsb,
@@ -64,17 +54,17 @@ function convertRow(row: any): MidiParameter {
 		offset,
 		simpleColor,
 	} = row;
-	const protocol: MidiParameterProtocol = cc_msb 
+	const protocol: MidiParameterProtocol = cc 
 	? {
 		type: 'cc',
-		msb: Number.parseInt(cc_msb),
+		msb: Number.parseInt(cc),
 	}
 	: {
 		type: 'nrpn',
 		msb: Number.parseInt(nrpn_msb),
 		lsb: Number.parseInt(nrpn_lsb),
 	};
-	const sysexAddress = getSysexAddress(parameter_description);
+	const sysexAddress = (sysex_addr && sysex_addr.length) ? +sysex_addr : -1 ;
 	const modDestination = (modDest && modDest.length) ? +modDest : null;
 
 	return {
@@ -86,7 +76,6 @@ function convertRow(row: any): MidiParameter {
 		protocol,
 		orientation: orientation === 'Centered' ? 'centered' : 'zeroBased',
 		label,
-		color,
 		valueNames: convertNotes(notes),
 		modDestination,
 		readLsb: +readLsb, 
