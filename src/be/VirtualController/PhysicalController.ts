@@ -3,25 +3,13 @@ import { IPoint2, range } from "../../shared/utils";
 import { Lcxl, LcxlGridColor, LcxlSideColor } from "../NovationLcxl";
 import { CircuitVirtualController } from "./CircuitVirtualController";
 
-interface ActionButton {
-	label: string,
-	index: number,
-	color: LcxlGridColor,
-	action: () => void;
-}
+
 
 export class PhysicalVirtualAdapter {
-
-	actionButtons: ActionButton[] = []; 
-
 	constructor(
 		readonly lcxl: Lcxl,
 		readonly virtual: CircuitVirtualController,
 	) { 
-		this.actionButtons = [
-			{ label: 'Refresh', index: 0, color: 'yellow', action: () => this.virtual.refresh() },
-			{ label: 'Save', index: 1, color: 'redH', action: () => this.virtual.save() },
-		];
 	}
 
 	start = async () => {
@@ -51,7 +39,7 @@ export class PhysicalVirtualAdapter {
 		});
 		lcxl.on('gridButton', ({ location: { index }, isPressed }) => {
 			if (!isPressed) { return; }
-			const action = this.actionButtons.find(a => a.index === index - 8);
+			const action = this.virtual.getActionButtons().find(a => a.index === index - 8);
 			if (!action) { return; }
 			action.action();
 		});
@@ -103,7 +91,7 @@ export class PhysicalVirtualAdapter {
 		this.virtual.getGridLeds().forEach(({index, color}) => {
 			this.lcxl.setGridLed(index, color);
 		});
-		this.actionButtons.forEach(({ index, color }) => {
+		this.virtual.getActionButtons().forEach(({ index, color }) => {
 			this.lcxl.setGridLed(index + 32, color);
 		});
 	}

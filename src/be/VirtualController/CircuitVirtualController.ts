@@ -3,12 +3,28 @@ import { UiModMatrix, UiModMatrixSlot, UiParameter, UiState } from "../../shared
 import { IPoint2, range } from "../../shared/utils";
 import { IBroker } from "../Broker";
 import { NovationCircuit } from "../NovationCircuit/NovationCircuit";
-import { LcxlGridColor } from "../NovationLcxl";
+import { LcxlGridColor, LcxlSideColor } from "../NovationLcxl";
 import { UiLayout } from "./UiLayout";
+
+export interface BottomAction {
+	label: string,
+	index: number,
+	color: LcxlGridColor,
+	action: () => void,
+}
+
+export interface SideAction {
+	label: string,
+	index: number,
+	color: LcxlSideColor,
+	action: () => void,
+}
+
 
 export class CircuitVirtualController extends EventEmitter<{
 	changed: (newValue: UiState) => void,
 }>{
+
 
 	private controllerSize = { x: 8, y: 4 };
 
@@ -43,6 +59,13 @@ export class CircuitVirtualController extends EventEmitter<{
 			circuit.announceState();
 		});
 		circuit.on('patchChanged', (synthNumber, patch) => broker.pub(`web/circuit/patch`, { patch, synthNumber }));
+	}
+
+	getActionButtons(): BottomAction[] {
+		return [
+			{ label: 'Refresh', index: 0, color: 'yellow', action: () => this.refresh() },
+			{ label: 'Save', index: 1, color: 'redH', action: () => this.save() },
+		];
 	}
 
 	save = () => {
