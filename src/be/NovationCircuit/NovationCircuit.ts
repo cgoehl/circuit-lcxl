@@ -113,6 +113,20 @@ export class NovationCircuit extends BaseDevice<{
 		this.__currentDumpRequestSynth = synth;
 	}
 
+	public savePatch = (patch: CircuitPatch, index: number) => {
+		if (index < 0 || index > 63) { throw new Error(`Index out of range: ${index}`); }
+		const msg = [
+			...circuitSysex.header,
+			circuitSysex.commands.replacePatch,
+			index,
+			0,
+			...patch.bytes,
+			...circuitSysex.footer,
+		];
+		console.log(`Saving patch: ${index}, msg-len: ${msg.length}`, msg)
+		this.midi.output.send('sysex' as any, msg as any);
+	}
+
 	private handleSysex = (msg: number[]): void => {
 		const ci = circuitSysex.commandIndex;
 		const command = msg[ci];

@@ -20,7 +20,7 @@ export class PhysicalVirtualAdapter {
 	) { 
 		this.actionButtons = [
 			{ label: 'Refresh', index: 0, color: 'yellow', action: () => this.virtual.refresh() },
-			{ label: 'Save', index: 1, color: 'redH', action: () => {} },
+			{ label: 'Save', index: 1, color: 'redH', action: () => this.virtual.save() },
 		];
 	}
 

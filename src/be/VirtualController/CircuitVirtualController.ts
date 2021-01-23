@@ -45,6 +45,11 @@ export class CircuitVirtualController extends EventEmitter<{
 		circuit.on('patchChanged', (synthNumber, patch) => broker.pub(`web/circuit/patch`, { patch, synthNumber }));
 	}
 
+	save = () => {
+		const { activeSynth } = this.state;
+		const patch = activeSynth === 0 ? this.circuit.patch0 : this.circuit.patch1;
+		this.circuit.savePatch(patch.get(), 0);
+	}
 
 	handleControlChange = (col: number, row: number, value: number) => {
 		const { controllerAnchor: { x, y }, modMatrix: { mode, slot }} = this.state;

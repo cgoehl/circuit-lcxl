@@ -12,6 +12,7 @@ const footer = [
 const commands = { 
 	currentPatchDump: 0x40,
 	replaceCurrentPatch: 0x0,
+	replacePatch: 0x01,
 };
 
 export const circuitSysex = {
