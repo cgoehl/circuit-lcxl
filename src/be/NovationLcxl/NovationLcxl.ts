@@ -12,8 +12,13 @@ export type LcxlGridColor
 	| 'redL'
 	| 'redH';
 
-class LcxlLedEncoder {
-	colorCodes = {
+export type LcxlSideColor
+	= 'off'
+	| 'low'
+	| 'medium'
+	| 'high';
+
+const gridColorCodes = {
 		off: 12,
 		redL: 13,
 		redH: 15,
@@ -24,30 +29,19 @@ class LcxlLedEncoder {
 		greenH: 60,
 	};
 
-	blinkCodes = {
+const blinkCodes = {
 		red: 11,
 		amber: 59,
 		yellow: 58,
 		green: 56,
 	};
 
-	rangeColors = [ 'greenH', 'greenL', 'yellow', 'amberH', 'redL', 'redH'];
-
-	colorCodeInRange = (value: number, min: number = 0, max: number = 127): number => {
-		const valueIn = Math.min(Math.max(min, value), max);
-		const rangeIn = max - min;
-		const relativeIn = (valueIn - min) / rangeIn;
-		const rangeOut = this.rangeColors.length - 1;
-		const index = Math.floor(rangeOut * relativeIn);
-		return this.colorCodes[this.rangeColors[index]];
-	};
-
-	getColor = (color: number | string) => {
-		return typeof color === 'string'
-			? this.colorCodes[color]
-			: this.colorCodeInRange(color);
+const	sideColorCodes = {
+		off: 0,
+		low: 18,
+		medium: 35,
+		high: 63,
 	}
-}
 
 export class Lcxl extends BaseDevice<{
 	knob: (knob: Knob) => void;
@@ -83,35 +77,31 @@ export class Lcxl extends BaseDevice<{
 	private static upDownButtonCC = [ 104, 105 ];
 	private static leftRightButtondCC = [ 106, 107 ];
 
-	private static ledEncoder = new LcxlLedEncoder();
-
 	knobGrid: Knob[] = [];
 	buttonGrid: Button[] = [];
 	sideButtons: Button[] = [];
 	upDownButtons: Button[] = [];
 	leftRightButtons: Button[] = [];
 
-	private setNoteLed = (note: number) => (color: number | string) => {
-		const value = Lcxl.ledEncoder.getColor(color);
+	private setNoteLed = (note: number) => (value: number) => {
 		const message: Note = { channel: 8, note, velocity: value };
 		this.midi.output.send('noteon', message);
 	}
 
-	private setCcLed = (controller: number) => (color: number | string) => {
-		const value = Lcxl.ledEncoder.getColor(color);
+	private setCcLed = (controller: number) => (value: number) => {
 		const message: ControlChange = { channel: 8, controller, value };
 		this.midi.output.send('cc', message);
 	}
 
-	setDirectionLed = (index: number, color: number | string): void => {
-		this.setCcLed(104 + index)(color);
+	setDirectionLed = (index: number, isOn: boolean): void => {
+		this.setCcLed(104 + index)(isOn ? gridColorCodes.redH : 0);
 	}
 
-	setGridLed = (index: number, color: number | LcxlGridColor): void => 
-		this.setNoteLed(Lcxl.gridLedNotes[index])(color);
+	setGridLed = (index: number, color: LcxlGridColor): void => 
+		this.setNoteLed(Lcxl.gridLedNotes[index])(gridColorCodes[color]);
 
-	setSideLed = (index: number, color: number | string): void => 
-		this.setNoteLed(Lcxl.sideButtonLedNotes[index])(color);
+	setSideLed = (index: number, color: LcxlSideColor): void => 
+		this.setNoteLed(Lcxl.sideButtonLedNotes[index])(sideColorCodes[color]);
 
 	clearLeds = () => {
 		range(Lcxl.gridLedNotes.length).forEach(i => this.setGridLed(i, 'off'));

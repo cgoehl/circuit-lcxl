@@ -1,6 +1,6 @@
 import { UiModMatrixMode, UiState } from "../../shared/UiDtos";
 import { IPoint2, range } from "../../shared/utils";
-import { Lcxl, LcxlGridColor } from "../NovationLcxl";
+import { Lcxl, LcxlGridColor, LcxlSideColor } from "../NovationLcxl";
 import { CircuitVirtualController } from "./CircuitVirtualController";
 
 interface ActionButton {
@@ -83,20 +83,20 @@ export class PhysicalVirtualAdapter {
 		}});
 	}
 
-	readonly modMatrixModeColors = {
-		open: 'redL',
-		awaitingCombo: 'amberH',
-		closed: 'greenL',
+	readonly modMatrixModeColors: {[key: string]: LcxlSideColor} = {
+		open: 'low',
+		awaitingCombo: 'high',
+		closed: 'off',
 	};
 	
 	handleUiStateChange = (state: UiState) => {
 		const { controllerPage, modMatrix: { mode }, activeSynth } = state;
 		this.lcxl.clearLeds();
 		range(4).forEach(i => {
-			this.lcxl.setDirectionLed(i, i === controllerPage ? 'redH' : 'off');
+			this.lcxl.setDirectionLed(i, i === controllerPage);
 		});
-		this.lcxl.setSideLed(0, activeSynth === 0 ? 'greenL' : 'off');
-		this.lcxl.setSideLed(1, activeSynth === 1 ? 'greenL' : 'off');
+		this.lcxl.setSideLed(0, activeSynth === 0 ? 'high' : 'off');
+		this.lcxl.setSideLed(1, activeSynth === 1 ? 'high' : 'off');
 		this.lcxl.setSideLed(2, 'off');
 		this.lcxl.setSideLed(3, this.modMatrixModeColors[mode]);
 
