@@ -1,15 +1,28 @@
 import { UiModMatrixMode, UiState } from "../../shared/UiDtos";
 import { IPoint2, range } from "../../shared/utils";
-import { Lcxl } from "../NovationLcxl";
+import { Lcxl, LcxlGridColor } from "../NovationLcxl";
 import { CircuitVirtualController } from "./CircuitVirtualController";
 
+interface ActionButton {
+	label: string,
+	index: number,
+	color: LcxlGridColor,
+	action: () => void;
+}
 
 export class PhysicalVirtualAdapter {
+
+	actionButtons: ActionButton[] = []; 
 
 	constructor(
 		readonly lcxl: Lcxl,
 		readonly virtual: CircuitVirtualController,
-	) { }
+	) { 
+		this.actionButtons = [
+			{ label: 'Refresh', index: 0, color: 'yellow', action: () => this.virtual.refresh() },
+			{ label: 'Save', index: 1, color: 'redH', action: () => {} },
+		];
+	}
 
 	start = async () => {
 		const {  lcxl, virtual } = this;
@@ -31,13 +44,16 @@ export class PhysicalVirtualAdapter {
 				case 1:
 					this.virtual.updateState(state => ({...state, activeSynth: 1 }));
 					break;
-				case 2:
-					this.handleReloadButton();
-					break;
 				case 3:
 					this.handleModMatrixButton(isPressed);
 					break;
 			}
+		});
+		lcxl.on('gridButton', ({ location: { index }, isPressed }) => {
+			if (!isPressed) { return; }
+			const action = this.actionButtons.find(a => a.index === index - 8);
+			if (!action) { return; }
+			action.action();
 		});
 		lcxl.on('knob', knob => {
 			const { location: { col, row }, value } = knob;
@@ -81,10 +97,14 @@ export class PhysicalVirtualAdapter {
 		});
 		this.lcxl.setSideLed(0, activeSynth === 0 ? 'greenL' : 'off');
 		this.lcxl.setSideLed(1, activeSynth === 1 ? 'greenL' : 'off');
-		this.lcxl.setSideLed(2, 'greenL');
+		this.lcxl.setSideLed(2, 'off');
 		this.lcxl.setSideLed(3, this.modMatrixModeColors[mode]);
+
 		this.virtual.getGridLeds().forEach(({index, color}) => {
 			this.lcxl.setGridLed(index, color);
+		});
+		this.actionButtons.forEach(({ index, color }) => {
+			this.lcxl.setGridLed(index + 32, color);
 		});
 	}
 
