@@ -3,7 +3,8 @@ import { UiView as UiViewKey, UiState } from "../../shared/UiDtos";
 import { IPoint2, range } from "../../shared/utils";
 import { IBroker } from "../Broker";
 import { NovationCircuit } from "../NovationCircuit/NovationCircuit";
-import { LcxlGridColor, LcxlSideColor } from "../NovationLcxl";
+import { Lcxl, LcxlGridColor, LcxlSideColor } from "../NovationLcxl";
+import { SelectSlotMode } from "./SelectSlotMode";
 import { SynthMatrixComboMode } from "./SynthMatrixComboMode";
 import { SynthMatrixMode } from "./SynthMatrixMode";
 import { SynthParamsMode } from "./SynthParamsMode";
@@ -31,6 +32,11 @@ export class CircuitVirtualController extends EventEmitter<{
 		modMatrix: {
 			slot: 0,
 		},
+		selectSlot: {
+			index: 0,
+			page: 0,
+			pendingAction: () => {}
+		},
 	};
 
 	public readonly sideActions: Action<LcxlSideColor>[];
@@ -56,7 +62,8 @@ export class CircuitVirtualController extends EventEmitter<{
 		this.views.synthMatrixCombo = this.synthMatrixComboMode = new SynthMatrixComboMode(
 			this, 
 			this.synthParamsMode.layout,
-			this.synthMatrixMode.layout);	
+			this.synthMatrixMode.layout);
+		this.views.selectSlot = new SelectSlotMode(this);
 		
 		this.sideActions = this.viewKeys
 			.map((view, index) => {
@@ -96,9 +103,26 @@ export class CircuitVirtualController extends EventEmitter<{
 	}
 
 	save = () => {
-		const { activeSynth } = this.state;
-		const patch = activeSynth === 0 ? this.circuit.patch0 : this.circuit.patch1;
-		this.circuit.savePatch(patch.get(), 0);
+		const pendingAction = (slot, confirmed) => {
+			if (confirmed) {
+				const { activeSynth } = this.state;
+				const patch = activeSynth === 0 ? this.circuit.patch0 : this.circuit.patch1;
+				this.circuit.savePatch(patch.get(), slot);
+			}
+			this.updateState(state => ({ ...state, activeView: 'synthParams' }));
+		}
+
+		this.updateState(state => {
+			return {
+				...state,
+				activeView: 'selectSlot',
+				selectSlot: {
+					index: 0,
+					page: 0,
+					pendingAction,
+				}
+			}
+		});
 	}
 
 	getBottomActions = () => this.activeView().bottomActions;

@@ -14,6 +14,7 @@ export type UiView
 	= 'synthParams'
 	| 'synthMatrix'
 	| 'synthMatrixCombo'
+	| 'selectSlot'
 
 
 export interface UiState {
@@ -23,6 +24,11 @@ export interface UiState {
 	activeSynth: SynthNumber,
 	modMatrix: {
 		slot: number,
+	},
+	selectSlot: {
+		index: number,
+		page: number,
+		pendingAction: (slot: number, confirmed: boolean) => void,
 	},
 }
 
