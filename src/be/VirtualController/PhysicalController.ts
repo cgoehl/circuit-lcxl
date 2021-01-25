@@ -1,11 +1,39 @@
-import { UiModMatrixMode, UiState } from "../../shared/UiDtos";
-import { IPoint2, range } from "../../shared/utils";
+import { UiState } from "../../shared/UiDtos";
+import { range } from "../../shared/utils";
 import { Lcxl, LcxlGridColor, LcxlSideColor } from "../NovationLcxl";
-import { CircuitVirtualController } from "./CircuitVirtualController";
+import { Button } from "../PhysicalControl";
+import { Action, CircuitVirtualController } from "./CircuitVirtualController";
 
+class LedGroupState<TColor> {
+	
+	public readonly currentColor: TColor[] = [];
 
+	constructor(
+		public readonly count,
+		public readonly initialColor: TColor,
+		public readonly updateFunc: (index: number, color: TColor) => void,
+	) {
+		this.reset();
+	}
+
+	reset = () => range(this.count).forEach(index => {
+		this.currentColor[index] = this.initialColor;
+		this.updateFunc(index, this.initialColor);
+	});
+
+	apply = (color: TColor, index: number) => {
+		if (index < 0 || index >= this.count) { throw new Error(`Out of range: ${index}`); }
+		if (color !== this.currentColor[index]) { this.updateFunc(index, color);	}
+		this.currentColor[index] = color;
+	}
+}
 
 export class PhysicalVirtualAdapter {
+
+	readonly gridLeds = new LedGroupState<LcxlGridColor>(40, 'off', this.lcxl.setGridLed);
+	readonly sideLeds = new LedGroupState<LcxlSideColor>(4, 'off', this.lcxl.setSideLed);
+	readonly directionLeds = new LedGroupState<boolean>(4, false, this.lcxl.setDirectionLed);
+
 	constructor(
 		readonly lcxl: Lcxl,
 		readonly virtual: CircuitVirtualController,
@@ -14,35 +42,9 @@ export class PhysicalVirtualAdapter {
 
 	start = async () => {
 		const {  lcxl, virtual } = this;
-		lcxl.on('directionButton', button => {
-			const { location: { index }, isPressed } = button;
-			if (!isPressed) { return; }
-			virtual.updateState(state => ({
-				...state,
-				controllerPage: index,
-				controllerAnchor: this.pageToAnchor(index),
-			}));
-		})
-		lcxl.on('sideButton', button => {
-			const { location: { index }, isPressed } = button;
-			switch(index) {
-				case 0:
-					this.virtual.updateState(state => ({...state, activeSynth: 0 }));
-					break;
-				case 1:
-					this.virtual.updateState(state => ({...state, activeSynth: 1 }));
-					break;
-				case 3:
-					this.handleModMatrixButton(isPressed);
-					break;
-			}
-		});
-		lcxl.on('gridButton', ({ location: { index }, isPressed }) => {
-			if (!isPressed) { return; }
-			const action = this.virtual.getActionButtons().find(a => a.index === index - 8);
-			if (!action) { return; }
-			action.action();
-		});
+		lcxl.on('directionButton', button => this.handleActionButton(button, virtual.directionActions, 0))
+		lcxl.on('sideButton', button => this.handleActionButton(button, virtual.sideActions, 0));
+		lcxl.on('gridButton', button => this.handleActionButton(button, virtual.getBottomActions(), 8));
 		lcxl.on('knob', knob => {
 			const { location: { col, row }, value } = knob;
 			virtual.handleControlChange(col, row, value);
@@ -51,57 +53,17 @@ export class PhysicalVirtualAdapter {
 		this.handleUiStateChange(virtual.state);
 	};
 
-	handleReloadButton = () => {
-		this.virtual.refresh();
+	handleActionButton = <TColor>(button: Button, actions: Action<TColor>[], offset: number) => {
+		const { isPressed, location: { index }} = button;
+		const action = actions.find(a => a.index + offset === index);
+		if (!action) return;
+		if (isPressed && action.onPress) { action.onPress(); }
+		if (!isPressed && action.onRelease) { action.onRelease(); }
 	}
-
-	handleModMatrixButton = (isPressed: boolean) => {
-		const { virtual, lcxl } = this;
-		virtual.updateState((state: UiState) => {
-			const { modMatrix: { mode, slot }} = state;
-			let newMode: UiModMatrixMode = 
-				(mode === 'closed' && isPressed) ? 'awaitingCombo' :
-				(mode === 'awaitingCombo' && !isPressed) ? 'open' :
-				(mode === 'open' && isPressed) ? 'closed' : mode;
-			if (newMode === mode) { return state; }
-			console.log(newMode);
-			return {
-				...state,
-				modMatrix: { mode: newMode, slot },
-		}});
-	}
-
-	readonly modMatrixModeColors: {[key: string]: LcxlSideColor} = {
-		open: 'low',
-		awaitingCombo: 'high',
-		closed: 'off',
-	};
 	
 	handleUiStateChange = (state: UiState) => {
-		const { controllerPage, modMatrix: { mode }, activeSynth } = state;
-		this.lcxl.clearLeds();
-		range(4).forEach(i => {
-			this.lcxl.setDirectionLed(i, i === controllerPage);
-		});
-		this.lcxl.setSideLed(0, activeSynth === 0 ? 'high' : 'off');
-		this.lcxl.setSideLed(1, activeSynth === 1 ? 'high' : 'off');
-		this.lcxl.setSideLed(2, 'off');
-		this.lcxl.setSideLed(3, this.modMatrixModeColors[mode]);
-
-		this.virtual.getGridLeds().forEach(({index, color}) => {
-			this.lcxl.setGridLed(index, color);
-		});
-		this.virtual.getActionButtons().forEach(({ index, color }) => {
-			this.lcxl.setGridLed(index + 32, color);
-		});
+		this.virtual.getSideLeds().forEach(this.sideLeds.apply);
+		this.virtual.getGridLeds().forEach(this.gridLeds.apply);
+		this.virtual.getDirectionLeds().forEach(this.directionLeds.apply);
 	}
-
-	pageToAnchor = (page: number): IPoint2 => {
-		switch (page) {
-			case 0: return ({ x: 0, y: 0 });
-			case 1: return ({ x: 8, y: 0 });
-			case 2: return ({ x: 0, y: 4 });
-			case 3: return ({ x: 8, y: 4 });
-		}
-	};
 }

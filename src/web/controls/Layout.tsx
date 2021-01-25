@@ -4,21 +4,29 @@ import { IAppState } from '../state/store';
 import { GridContainer } from './GridComponent';
 import { MatrixContainer } from './MatrixComponent';
 import './LayoutComponent.scss';
+import { UiView } from '../../shared/UiDtos';
+
+const getComponent = (activeView: UiView) => {
+	switch (activeView) {
+		case 'synthParams': return GridContainer;
+		case 'synthMatrixCombo': return GridContainer;
+		case 'synthMatrix': return MatrixContainer;
+		default: return () => <div>Unknown view: {activeView}</div>
+	}
+}
 
 function LayoutComponent(props: {
-	isOpen: boolean,
+	activeView: UiView,
 	activeSynth: number,
 }) {
 	return ( 
 	<div className={`active-synth-${props.activeSynth}`} >
-		{ props.isOpen
-		? <MatrixContainer />
-		: <GridContainer /> }
+		{React.createElement(getComponent(props.activeView))}
 	</div>
 	);
 }
 
 export const LayoutContainer = connect((state: IAppState) => {
-	const { ui: { state: { modMatrix: { mode }, activeSynth }}} = state;
-	return { isOpen: mode === 'open', activeSynth }
+	const { ui: { state: { activeView, activeSynth }}} = state;
+	return { activeView, activeSynth }
 })(LayoutComponent);

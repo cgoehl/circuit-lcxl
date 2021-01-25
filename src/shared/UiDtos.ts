@@ -1,20 +1,28 @@
+import { type } from "os";
+import { SynthNumber } from "../web/state/store";
 import { IPoint2 } from "./utils";
 
 export type UiControl 
 	=	UiParameter
 	| UiGrid;
 
-export type UiOrientation = 'centered' | 'zeroBased';
-export type UiModMatrixMode = 'open' | 'awaitingCombo' | 'closed';
+export type UiOrientation 
+		= 'centered' 
+		| 'zeroBased'
+
+export type UiView
+	= 'synthParams'
+	| 'synthMatrix'
+	| 'synthMatrixCombo'
 
 
 export interface UiState {
 	controllerAnchor: IPoint2,
 	controllerPage: number,
-	activeSynth: 0 | 1,
+	activeView: UiView,
+	activeSynth: SynthNumber,
 	modMatrix: {
 		slot: number,
-		mode: UiModMatrixMode,
 	},
 }
 

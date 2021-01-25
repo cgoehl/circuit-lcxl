@@ -1,71 +1,98 @@
 import { EventEmitter } from "tsee";
-import { UiModMatrix, UiModMatrixSlot, UiParameter, UiState } from "../../shared/UiDtos";
+import { UiView as UiViewKey, UiState } from "../../shared/UiDtos";
 import { IPoint2, range } from "../../shared/utils";
 import { IBroker } from "../Broker";
 import { NovationCircuit } from "../NovationCircuit/NovationCircuit";
 import { LcxlGridColor, LcxlSideColor } from "../NovationLcxl";
-import { UiLayout } from "./UiLayout";
+import { SynthMatrixComboMode } from "./SynthMatrixComboMode";
+import { SynthMatrixMode } from "./SynthMatrixMode";
+import { SynthParamsMode } from "./SynthParamsMode";
+import { VirtualMode } from "./VirtualMode";
 
-export interface BottomAction {
+export interface Action<TColor> {
 	label: string,
 	index: number,
-	color: LcxlGridColor,
-	action: () => void,
+	color: () => TColor,
+	onPress?: () => void,
+	onRelease?: () => void,
 }
-
-export interface SideAction {
-	label: string,
-	index: number,
-	color: LcxlSideColor,
-	action: () => void,
-}
-
 
 export class CircuitVirtualController extends EventEmitter<{
 	changed: (newValue: UiState) => void,
 }>{
 
-
-	private controllerSize = { x: 8, y: 4 };
+	public controllerSize = { x: 8, y: 4 };
 
 	public state : UiState = {
 		controllerPage: 0,
 		controllerAnchor: { x: 0, y: 0 },
 		activeSynth: 0,
+		activeView: 'synthParams',
 		modMatrix: {
 			slot: 0,
-			mode: 'closed'
 		},
 	};
 
+	public readonly sideActions: Action<LcxlSideColor>[];
+	public readonly directionActions: Action<boolean>[];
+
+	private readonly viewKeys: UiViewKey[] = [ 'synthParams', 'synthMatrix' ];
+	private readonly views: {[ key: string ]: VirtualMode } = {};
+
+	private activeView = () => this.views[this.state.activeView];
+
+	private readonly synthParamsMode: SynthParamsMode;
+	private readonly synthMatrixMode: SynthMatrixMode;
+	private readonly synthMatrixComboMode: SynthMatrixComboMode;
+	
 	constructor(
 		readonly circuit: NovationCircuit,
 		readonly broker: IBroker,
 	) {
 		super();
-		this.knobUi = this.buildKnobUi();
-		this.modMatrixUi = this.buildModMatrixUi();
-	}
 
-	readonly knobUi: UiLayout;
-	readonly modMatrixUi: UiModMatrix;
+		this.views.synthParams = this.synthParamsMode = new SynthParamsMode(this);
+		this.views.synthMatrix = this.synthMatrixMode = new SynthMatrixMode(this);
+		this.views.synthMatrixCombo = this.synthMatrixComboMode = new SynthMatrixComboMode(
+			this, 
+			this.synthParamsMode.layout,
+			this.synthMatrixMode.layout);	
+		
+		this.sideActions = this.viewKeys
+			.map((view, index) => {
+				return {
+					label: view,
+					index,
+					color: () => this.state.activeView === view ? 'high' : 'off', 
+					onRelease: () => { this.updateState( state => ({ ...state, activeView: view }))}
+				} as Action<LcxlSideColor>;
+			});
+		this.sideActions[1].onPress = () => { 
+			this.updateState( state => ({ ...state, activeView: 'synthMatrixCombo' }))};
+	
+		this.directionActions = range(4).map(index => ({
+			label: `Page ${index}`,
+			index,
+			color: () => this.state.controllerPage === index,
+			onPress: () => {
+				this.updateState(state => ({
+					...state,
+					controllerPage: index,
+					controllerAnchor: this.pageToAnchor(index),
+				}));
+			}
+		}));	
+	}
 
 	start = async () => {
 		const { broker, circuit } = this;
 		await broker.sub(`web/hello`, async (payload: any) => {
-			broker.pub(`web/ui/layout/knobs`, this.knobUi.buildGrid());
-			broker.pub(`web/ui/layout/mod-matrix`, this.modMatrixUi);
+			broker.pub(`web/ui/layout/knobs`, this.synthParamsMode.layout.buildGrid());
+			broker.pub(`web/ui/layout/mod-matrix`, this.synthMatrixMode.layout);
 			this.updateState(s => s);
 			circuit.announceState();
 		});
 		circuit.on('patchChanged', (synthNumber, patch) => broker.pub(`web/circuit/patch`, { patch, synthNumber }));
-	}
-
-	getActionButtons(): BottomAction[] {
-		return [
-			{ label: 'Refresh', index: 0, color: 'yellow', action: () => this.refresh() },
-			{ label: 'Save', index: 1, color: 'redH', action: () => this.save() },
-		];
 	}
 
 	save = () => {
@@ -74,246 +101,33 @@ export class CircuitVirtualController extends EventEmitter<{
 		this.circuit.savePatch(patch.get(), 0);
 	}
 
-	handleControlChange = (col: number, row: number, value: number) => {
-		const { controllerAnchor: { x, y }, modMatrix: { mode, slot }} = this.state;
-		if (mode === 'open') {
-			if (row !== 0) { return; }
-			if (col === 0) {
-				this.updateState(s => ({ ...this.state, modMatrix: { mode, slot: Math.floor(value / 127 * (this.modMatrixUi.slots.length - 1)) }}));
-			}
-			if (col > 3) {
-				const s = this.modMatrixUi.slots[slot];
-				if(!s) {
-					console.warn('out of range', slot);
-					return;
-				}
-				const { source1Address, source2Address, depthAddress, destinationAddress } = s;
-				const address = [ source1Address, source2Address, depthAddress, destinationAddress ][col - 4];
-				this.circuit.setMidiParamRelative(this.state.activeSynth, this.circuit.parametersByAddress[address], value);
-			}
-		} else if (mode === 'awaitingCombo') {
-			if (value == null) { return; }
-			const absVKnob = { x: col + x, y: row + y };
-			const uiParam = this.knobUi.getAt(absVKnob);
-			const { modDestination } = uiParam;
-			if (modDestination === null ) { return; }
-			const { slots } = this.modMatrixUi;
-			let activeSlot = slots.find( slot => {
-				const activeDestination = this.circuit.getPatch(this.state.activeSynth).bytes[slot.destinationAddress];
-				return activeDestination === modDestination;
-			});
-			if (!activeSlot) {
-				activeSlot = slots.find( (slot, i) => {
-					console.log('findslot', i, this.circuit.getPatch(this.state.activeSynth).bytes[slot.destinationAddress]); 
-					return this.circuit.getPatch(this.state.activeSynth).bytes[slot.destinationAddress] === 0;
-				});
-				if (!activeSlot) { return; }
-				const param = this.circuit.parametersByAddress[activeSlot.destinationAddress];
-				this.circuit.setMidiParamAbsolute(this.state.activeSynth, param, modDestination);
-			}
-			this.updateState(state => ({ ...state, modMatrix: { slot: activeSlot.slotNumber - 1, mode: 'open' }}));
-		} else {
-			if (value == null) { return; }
-			const absVKnob = { x: col + x, y: row + y };
-			const uiParam = this.knobUi.getAt(absVKnob);
-			if (!uiParam) { return; }
-			const midiParam = this.circuit.parametersByName[uiParam.name];
-			if (!midiParam) { return; }
-			this.circuit.setMidiParamRelative(this.state.activeSynth, midiParam, value);
-		}
-	}
+	getBottomActions = () => this.activeView().bottomActions;
 
-	getGridLeds = (): { index: number, color: LcxlGridColor }[] => {
-		const { modMatrix: { mode }, controllerAnchor} = this.state;
-		const { controllerSize } = this;
-		const controllerGrid = this.knobUi.subGrid(controllerAnchor, controllerSize);
+	handleControlChange = (col: number, row: number, value: number) => this.activeView().handleControlChange(col, row, value);
 
-		switch (mode) {
-			case 'open': {
-				return range(4)
-					.map(index => ({ index: index + 4, color: 'greenH' }));
-			}
-			case 'awaitingCombo': {
-				return controllerGrid.items
-					.map((param, index) => ({index, param}))
-					.filter(p => p.param && p.param.modDestination !== null)
-					.map(({ index }) => ({ index, color: 'amberH' }));
-			}
-			case 'closed': {
-				return controllerGrid.items
-					.map((param, index) => ({ index, color: ( param ? param.simpleColor : 'off' ) as LcxlGridColor }));
-			}
-		}
-	}
+	getGridLeds = (): LcxlGridColor[] => this.activeView().getGridLeds();
 
-	refresh = () => this.circuit.reloadPatches();
+	getSideLeds = (): LcxlSideColor[] => range(4)
+		.map(index => {
+			return index >= this.viewKeys.length ? 'off' :
+				index === this.viewKeys.indexOf(this.state.activeView) ? 'high' : 'low';
+		});
+
+	getDirectionLeds = () => range(4).map(index => index === this.state.controllerPage);
+
 
 	updateState = (func: (state: UiState) => UiState) => {
 		this.state = func(this.state);
 		this.emit('changed', this.state);
 		this.broker.pub(`web/ui/state`, this.state);
 	}
-	
-	buildModMatrixUi = (): UiModMatrix => {
-		const baseAddress = 124;
-		const slots: UiModMatrixSlot[] = range(20)
-			.map(i => ({
-				slotNumber: i + 1,
-				source1Address: baseAddress + i * 4,
-				source2Address: baseAddress + i * 4 + 1,
-				depthAddress: baseAddress + i * 4 + 2,
-				destinationAddress: baseAddress + i * 4 + 3,
-			}));
-		return {
-			sources: this.circuit.parametersByName['mod matrix 1 source 1'].valueNames,
-			destinations: this.circuit.parametersByName['mod matrix 1 destination'].valueNames,
-			slots,
+
+	pageToAnchor = (page: number): IPoint2 => {
+		switch (page) {
+			case 0: return ({ x: 0, y: 0 });
+			case 1: return ({ x: 8, y: 0 });
+			case 2: return ({ x: 0, y: 4 });
+			case 3: return ({ x: 8, y: 4 });
 		}
-	}
-
-	buildKnobUi = (): UiLayout => {
-		const layout = new UiLayout(this.circuit.parametersByName, 16, 8);
-
-		const osc1Items = [
-			// `osc 1 level`,
-			`osc 1 semitones`,
-			`osc 1 wave interpolate`,
-			`osc 1 cents`,
-			`osc 1 virtual sync depth`,
-			`osc 1 pulse width index`,
-			`osc 1 density detune`,
-			`osc 1 wave`,
-			`osc 1 density`,
-			// `osc 1 pitchbend`,
-		];
-		layout.addRect({ x: 0, y: 0 }, 2, osc1Items);
-		const osc2Items = [
-			// `osc 2 level`,
-			`osc 2 semitones`,
-			`osc 2 wave interpolate`,
-			`osc 2 cents`,
-			`osc 2 virtual sync depth`,
-			`osc 2 pulse width index`,
-			`osc 2 density detune`,
-			`osc 2 wave`,
-			`osc 2 density`,
-			// `osc 2 pitchbend`,
-		];
-		layout.addRect({ x: 2, y: 0 }, 2, osc2Items);
-
-		const voiceItems = [
-			'Polyphony Mode',
-			'Portamento Rate',
-			'Pre-Glide',
-			'Keyboard Octave',
-		];
-		layout.addRow({ x: 4, y: 0}, voiceItems);
-
-		const filterItems = [
-			'routing',
-			'Q normalise',
-			'tracking',
-			'drive type',
-			'type',
-			'drive',
-			'frequency',
-			'resonance',
-		];
-		layout.addRect({x: 8, y: 0}, 2, filterItems);
-		layout.addRow({x: 2, y: 5}, ['env 2 to frequency']);
-
-		const envItems = [
-			'env 1 velocity',
-			'env 1 attack',
-			'env 1 decay',
-			'env 1 sustain',
-			'env 1 release',
-			'env 2 velocity',
-			'env 2 attack',
-			'env 2 decay',
-			'env 2 sustain',
-			'env 2 release',
-			'env 3 delay',
-			'env 3 attack',
-			'env 3 decay',
-			'env 3 sustain',
-			'env 3 release',
-		];
-		layout.addRect({ x: 3, y: 4 }, 5, envItems);
-
-		const addEqItems = () => {
-			const eqFreq = [
-				'EQ bass frequency',
-				'EQ mid frequency',
-				'EQ treble frequency',
-			];
-			const eqLevels = [
-				'EQ bass level',
-				'EQ mid level',
-				'EQ treble level',
-			];
-			const mixerItems = [
-				`osc 1 level`,
-				`osc 2 level`,
-				'ring mod level',
-				'noise level',
-			];
-
-			const fxMixerItems = [
-				'pre FX level',
-				'post FX level',
-			];
-
-			layout.addRow({x: 0, y: 4}, fxMixerItems);
-			layout.addRow({x: 0, y: 6}, eqFreq);
-			layout.addRow({x: 0, y: 7}, [ ...eqLevels, ...mixerItems ]);
-		};
-		addEqItems();
-
-		//LFO1_OneShot	(bit	0),	LFO1_KeySync	(bit	1),	LFO1_CommonSync	(bit	2),	LFO1_DelayTrigger	(bit	3),	LFO1_FadeMode	(bits	4-5)
-		const addLfoItems= (coords: IPoint2, lfoNum: 1 | 2) => {
-			const lfoItems = [
-				`lfo ${lfoNum} one shot`,
-				`lfo ${lfoNum} key sync`,
-				`lfo ${lfoNum} common sync`,
-				`lfo ${lfoNum} delay trigger`,
-				`lfo ${lfoNum} fade mode`,
-				`lfo ${lfoNum} slew rate`,
-				`lfo ${lfoNum} phase offset`,
-				`lfo ${lfoNum} rate sync`,
-				`lfo ${lfoNum} delay sync`,
-				`lfo ${lfoNum} waveform`,
-				`lfo ${lfoNum} rate`,
-				`lfo ${lfoNum} delay`,
-			];
-			layout.addRect(coords, 3, lfoItems);
-		}
-		addLfoItems({ x: 10, y: 0}, 1);
-		addLfoItems({ x: 13, y: 0}, 2);
-
-		const addFxItems = () => {
-			const distortionItems = [
-				'distortion type',
-				'distortion compensation',
-				'distortion level',
-			];
-
-			const chorusItems = [
-				'---',
-				'---',
-				'chorus type',
-				'chorus mod depth',
-				'chorus rate sync',
-				'chorus rate',
-				'chorus delay',
-				'chorus feedback',
-				'chorus level',
-			];
-
-			layout.addCol({x: 7, y: 1}, distortionItems);
-			layout.addRect({x: 4, y: 1}, 3, chorusItems);
-		}
-		addFxItems();
-		return layout;
-	}
+	};
 }
