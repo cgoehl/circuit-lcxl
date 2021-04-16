@@ -1,4 +1,4 @@
-﻿section,parameter_name,min,max,sysex_addr,cc,nrpn_msb,nrpn_lsb,orientation,label,readLsb,readMsb,offset,modDest,notes,simpleColor,scope,excel
+section,parameter_name,min,max,sysex_addr,cc,nrpn_msb,nrpn_lsb,orientation,label,readLsb,readMsb,offset,modDest,notes,simpleColor,scope,excel
 Voice,Polyphony Mode,0,2,32,3,,,0-based,Polyphony Mode,0,7,0,,0: Mono; 1: Mono AG; 2: Poly,greenH,synth,
 Voice,Portamento Rate,0,127,33,5,,,0-based,Portamento Rate,0,7,0,,,greenH,synth,
 Voice,Pre-Glide,52,76,34,9,,,Centered,Pre-Glide,0,7,0,,,greenH,synth,

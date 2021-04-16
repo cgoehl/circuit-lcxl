@@ -5,6 +5,7 @@ import { circuitSysex } from './ciruitSysex';
 import { readControls as readMidiMapping } from './midiMappingRead';
 import { CircuitPatch } from './Patch';
 import { Property } from '../../shared/Property';
+import { generateCpp } from './generateCpp';
 
 export type SynthNumber = 0 | 1;
 
@@ -156,5 +157,13 @@ export class NovationCircuit extends BaseDevice<{
 		const result = new NovationCircuit(midi);
 		await result.init();
 		return result;
+	}
+
+	static async generateCpp() {
+		const parameters = await readMidiMapping(`src/be/NovationCircuit/midiMapping.csv`);
+		const code = await generateCpp(parameters);
+		const fs = require('fs');
+		fs.writeFileSync('out/parameters.cpp', code);
+		return code;
 	}
 }

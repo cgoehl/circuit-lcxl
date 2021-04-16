@@ -1,14 +1,23 @@
 
 import { Lcxl } from './NovationLcxl/NovationLcxl';
 import { startBroker } from './Broker';
-import { Knob } from './PhysicalControl';
 import { Channel, getInputs, getOutputs, Input, Note, Output } from 'easymidi';
 import { NovationCircuit } from './NovationCircuit/NovationCircuit';
 import { CircuitVirtualController } from './VirtualController/CircuitVirtualController';
 import { PhysicalVirtualAdapter } from "./VirtualController/PhysicalController";
 import { delay } from '../shared/utils';
 
-mplx();
+let timer: NodeJS.Timeout;
+async function generateCpp() {
+	timer = setTimeout(() => {}, 999999);
+	const code = await NovationCircuit.generateCpp();
+	console.log(code);
+	clearTimeout(timer);
+}
+
+generateCpp();
+
+// mplx();
 //  lxclLedRange();
 // funnyLightsGame();
 
@@ -100,4 +109,8 @@ export async function playNotes(output: Output, channel: Channel, notes: number[
 		}
 		await delay(interval);
 	}
+}
+
+async function genCpp() {
+	
 }
