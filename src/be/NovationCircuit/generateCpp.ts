@@ -17,6 +17,11 @@ const generateSingle = (parameter: MidiParameter) => {
 		readLsb,
 		readMsb,
 		offset,
+		uiSlot: {
+			page,
+			x,
+			y,
+		}
 	} = parameter;
 
 	const valueNamesCpp = Object.entries(valueNames || {}).map(([k, v]) => `{ ${k}, "${v}" }`).join(', ');
@@ -38,7 +43,8 @@ const generateSingle = (parameter: MidiParameter) => {
 	.readLsb=${readLsb}, 
 	.readMsb=${readMsb}, 
 	.offset=${offset},
-}`;
+	.uiSlot=UiSlot(${page}, ${x}, ${y})
+}`.replace(/\s+/g, ' ');
 
 	return value;
 }

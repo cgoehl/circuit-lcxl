@@ -13,7 +13,14 @@ export interface MidiParameter {
 	readLsb: number,
 	readMsb: number,
 	offset: number,
-}
+	uiSlot: UiSlot,
+};
+
+export interface UiSlot {
+	page: number,
+	x: number,
+	y: number,
+};
 
 export type MidiParameterProtocol = MidiCc | MidiNrpn;
 

@@ -53,6 +53,9 @@ function convertRow(row: any): MidiParameter {
 		modDest,
 		offset,
 		simpleColor,
+		page,
+		x,
+		y,
 	} = row;
 	const protocol: MidiParameterProtocol = cc 
 	? {
@@ -82,5 +85,10 @@ function convertRow(row: any): MidiParameter {
 		readMsb: +readMsb,
 		offset: +offset,
 		simpleColor,
+		uiSlot: {
+			page: +page,
+			x: +x,
+			y: +y,
+		}
 	};
 }
