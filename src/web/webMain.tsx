@@ -6,7 +6,11 @@ import * as serviceWorker from './serviceWorker';
 import { Provider } from 'react-redux'
 import { store } from './state/store'
 
+
 export function webMain() {
+	// @ts-ignore
+	window.Buffer = Buffer;
+	
 	ReactDOM.render(
 		<Provider store={store}>
 			<App />
