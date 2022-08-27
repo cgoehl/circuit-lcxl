@@ -9,6 +9,11 @@ import { generateCpp } from './generateCpp';
 
 export type SynthNumber = 0 | 1;
 
+enum CircuitVersion {
+	OG = 0x60,
+	Tracks = 0x64,
+}
+
 export class NovationCircuit extends BaseDevice<{
 	patchChanged: (synthNumber: SynthNumber, patch: CircuitPatch) => void,
 }> {
@@ -16,6 +21,7 @@ export class NovationCircuit extends BaseDevice<{
 	public flatParameters: MidiParameter[];
 	public parametersByName: {[name: string]: MidiParameter} = null;
 	public parametersByAddress: {[address: string]: MidiParameter} = null;
+	deviceVersion: CircuitVersion = CircuitVersion.OG;
 	// sections: {[key: string]: ParameterSection} = {};
 
 	patch0 = new Property<CircuitPatch>(null);
@@ -27,6 +33,7 @@ export class NovationCircuit extends BaseDevice<{
 		this.parametersByName = arrayToObject(this.flatParameters, p => p.name);
 		this.parametersByAddress = arrayToObject(this.flatParameters, p => p.sysexAddress.toString());
 		const { input, output } = this.midi;
+		this.deviceVersion = input.name.includes("Tracks") ? CircuitVersion.Tracks : CircuitVersion.OG;
 		input.on('sysex' as any, (msg: any) => this.handleSysex(msg.bytes) as any);
 		input.on('program', message => this.loadPatch(message.channel as SynthNumber));
 		await this.reloadPatches();
@@ -105,7 +112,7 @@ export class NovationCircuit extends BaseDevice<{
 	private __currentDumpRequestSynth: SynthNumber = 0;
 	private loadPatch = (synth: SynthNumber) => {
 		const msg = [
-			...circuitSysex.header,
+			...circuitSysex.header(this.deviceVersion),
 			circuitSysex.commands.currentPatchDump,
 			synth,
 			...circuitSysex.footer,
@@ -117,7 +124,7 @@ export class NovationCircuit extends BaseDevice<{
 	public savePatch = (patch: CircuitPatch, index: number) => {
 		if (index < 0 || index > 63) { throw new Error(`Index out of range: ${index}`); }
 		const msg = [
-			...circuitSysex.header,
+			...circuitSysex.header(this.deviceVersion),
 			circuitSysex.commands.replacePatch,
 			index,
 			0,

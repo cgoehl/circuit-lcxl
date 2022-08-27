@@ -46,7 +46,7 @@ class MqttController {
 		})
 	}
 
-	publish = (topic: string, obj: object) => new Promise((resolve, reject) => {
+	publish = (topic: string, obj: object) => new Promise<void>((resolve, reject) => {
 		this.client.publish(
 			`${this.topicPrefix}/${topic}`,
 			JSON.stringify(obj),

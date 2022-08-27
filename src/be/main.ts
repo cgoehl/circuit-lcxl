@@ -15,7 +15,7 @@ async function generateCpp() {
 	clearTimeout(timer);
 }
 
-generateCpp();
+mplx();
 
 // mplx();
 //  lxclLedRange();
