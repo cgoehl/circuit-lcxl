@@ -21,7 +21,7 @@ export interface Action<TColor> {
 export class CircuitVirtualController extends EventEmitter<{
 	changed: (newValue: UiState) => void,
 }>{
-
+	
 	public controllerSize = { x: 8, y: 4 };
 
 	public state : UiState = {
@@ -123,6 +123,17 @@ export class CircuitVirtualController extends EventEmitter<{
 				}
 			}
 		});
+	}
+
+	dropMacros = () => {
+		const { circuit, state: { activeSynth } } = this;
+		for (let i = 1; i <= 8; i++) {
+			['A', 'B', 'C'].forEach(dest => {
+				const param = circuit.parametersByName[`macro knob ${i} destination ${dest}`];
+				circuit.setMidiParamAbsolute(activeSynth, param, 0);
+			}) 
+		}
+		setTimeout(() => circuit.reloadPatches(), 50);
 	}
 
 	getBottomActions = () => this.activeView().bottomActions;

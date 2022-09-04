@@ -19,6 +19,14 @@ export class SynthParamsMode extends VirtualMode {
 		this.bottomActions = [
 			{ label: 'Refresh', index: 0, color: () => 'yellow', onPress: () => controller.circuit.reloadPatches() },
 			{ label: 'Save', index: 1, color: () => 'redH', onPress: () => controller.save() },
+			{
+				label: 'Drop Mods',
+				index: 4,
+				color: () => 'redL',
+				onPress: () => {
+					controller.dropMacros();
+				}
+			},
 			{ 
 				label: 'Synth Number', 
 				index: 7, 
