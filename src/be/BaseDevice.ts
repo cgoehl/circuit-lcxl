@@ -1,3 +1,4 @@
+import { Console } from "console";
 import { ICloseable } from "./ICloseable";
 import { getInputs, getOutputs, Input, Output } from "easymidi";
 import { DefaultEventMap, EventEmitter } from "tsee";
@@ -7,6 +8,19 @@ export interface IMidiIO {
 	output: Output,
 }
 
+function attachLogger(io: IMidiIO) {
+	const oldEmit = io.input.emit;
+  io.input.emit = function() {
+		console.log('<==', io.input.name, ...Array.from(arguments));
+		oldEmit.apply(io.input, arguments);
+  } as any;
+
+	const oldSend = io.output.send;
+	io.output.send = function() {
+		console.log('==>', io.input.name,  ...Array.from(arguments));
+		oldSend.apply(io.output, arguments);
+	} as any;
+}
 
 export function detectMidi(isDevice: (name: string) => boolean) {
 	const inputName = getInputs().find(isDevice);
@@ -24,6 +38,7 @@ extends EventEmitter<EventMap> implements ICloseable {
 		public readonly midi: IMidiIO
 	) {
 		super();
+		attachLogger(midi);
 	}
 
 
